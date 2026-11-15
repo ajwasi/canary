@@ -671,8 +671,8 @@ def enroll(body: EnrollRequest, request: Request, db: Db = Depends(get_db)):
 # Keep these last: "/{kind}" would otherwise shadow the fixed paths above.
 
 KINDS = {
-    "people": dict(model=Person, title="People", one="person", press_col=Press.person_id, filter_key="person"),
-    "locations": dict(model=Location, title="Locations", one="location", press_col=Press.location_id,
+    "people": dict(path="/people", model=Person, title="People", one="person", press_col=Press.person_id, filter_key="person"),
+    "locations": dict(path="/locations", model=Location, title="Locations", one="location", press_col=Press.location_id,
                       filter_key="location"),
 }
 
@@ -711,7 +711,7 @@ def owner_create(kind: str, name: str = Form(""), notes: str = Form(""), address
     db.add(item)
     audit(db, user.email, f"added {k['one']} {item.name}")
     db.commit()
-    return go(f"/{kind}/{item.id}", f"Added {item.name}.")
+    return go(f"{k['path']}/{item.id}", f"Added {item.name}.")
 
 
 @app.get("/{kind}/{item_id}")
@@ -732,4 +732,4 @@ def owner_update(kind: str, item_id: int, name: str = Form(""), notes: str = For
     item.archived = archived == "1"
     audit(db, user.email, f"edited {k['one']} {item.name}")
     db.commit()
-    return go(f"/{kind}/{item_id}", "Saved.")
+    return go(f"{k['path']}/{item_id}", "Saved.")
