@@ -44,7 +44,7 @@ def main() -> None:
         procs.append(subprocess.Popen([py, "dev_broker.py", "--device-ca", str(state / "server" / "ca" / "device-ca.pem"),
                                        "--state", str(state)], cwd=HERE))
         time.sleep(1.5)
-        print(f"\nServer UI:   http://localhost:8000   sign in as {ADMIN_EMAIL} / {ADMIN_PASSWORD}")
+        print(f"\nServer UI:   http://localhost:8000   sign in as {ADMIN_EMAIL} (test password: see emulator/README.md)")
         for i in range(a.buttons):
             panel = 8090 + 2 * i
             cmd = [py, "button_emulator.py", "--dev", "--state", str(state), "--serial", f"BTN-E0E0E0E0{i + 1:04X}",

@@ -70,7 +70,7 @@ cd ..\emulator
 ..\server\.venv\Scripts\python run_rig.py
 ```
 
-1. Open http://localhost:8000 and sign in with the address and password the rig prints.
+1. Open http://localhost:8000 and sign in as `admin@example.com` with the password `local-test-rig-only` (an account that exists only on your computer).
 2. On the Buttons page, add a button and note its claim code.
 3. Open the emulated button at http://localhost:8090 and follow its link to the setup page.
 4. Choose the network `Warehouse-Staff`, password `blue-forklift-42`, server address `localhost`, and enter the claim code.
