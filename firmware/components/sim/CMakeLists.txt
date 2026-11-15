@@ -9,7 +9,7 @@ endif()
 
 idf_build_get_property(build_dir BUILD_DIR)
 idf_component_register(
-    SRCS "sim.c" "sim_wifi.c" "sim_ota.c"
+    SRCS "sim.c" "sim_wifi.c" "sim_ota.c" "sim_syscalls.c"
     INCLUDE_DIRS "include"
     PRIV_INCLUDE_DIRS "../../main"
     REQUIRES esp_event esp_http_client esp_partition soc
