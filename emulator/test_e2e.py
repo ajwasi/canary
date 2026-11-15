@@ -130,8 +130,7 @@ def rig(tmp_path_factory):
             server.terminate()
             if "button" in locals():                    # keep the unit's log for a failed run
                 log = Path(os.environ.get("CANARY_LOG", tmp / "firmware.log"))
-                log.write_text("
-".join(text for _, text in reversed(button.events)), encoding="utf-8")
+                log.write_text(chr(10).join(text for _, text in reversed(button.events)), encoding="utf-8")
         return
 
     server = start_server(tmp, f"http://localhost:{HTTP}", ["--port", str(HTTP)], f"http://localhost:{HTTP}", True)

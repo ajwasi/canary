@@ -12,8 +12,8 @@
 #include "sdkconfig.h"
 #include "app.h"
 
-#define BIT_CONNECTED BIT0
-#define BIT_DISCONNECTED BIT1
+#define BIT_CONNECTED (1 << 0)
+#define BIT_DISCONNECTED (1 << 1)
 #define MIN_5G_RSSI (-78)
 #define BONUS_5G 15
 

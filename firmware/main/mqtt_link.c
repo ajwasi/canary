@@ -22,7 +22,7 @@
 #include "sdkconfig.h"
 #include "app.h"
 
-#define BIT_CONNECTED BIT0
+#define BIT_CONNECTED (1 << 0)
 #define ACK_TIMEOUT_MS 10000
 
 typedef enum { JOB_OTA, JOB_AUDIO, JOB_CERT, JOB_REBOOT } job_type_t;
