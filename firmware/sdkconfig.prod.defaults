@@ -1,0 +1,19 @@
+# Production hardening. Build with:
+#   idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.prod.defaults" build
+# These settings burn eFuses on first boot and cannot be undone on that chip.
+
+# Secure boot v2: only images signed with your key will run (also enforced on OTA).
+CONFIG_SECURE_BOOT=y
+CONFIG_SECURE_BOOT_V2_ENABLED=y
+CONFIG_SECURE_BOOT_BUILD_SIGNED_BINARIES=y
+CONFIG_SECURE_BOOT_SIGNING_KEY="secure_boot_signing_key.pem"
+
+# Flash encryption, release mode: firmware and keys unreadable from the flash chip.
+CONFIG_SECURE_FLASH_ENC_ENABLED=y
+CONFIG_SECURE_FLASH_ENCRYPTION_MODE_RELEASE=y
+
+# Encrypt NVS (Wi-Fi password, device private key) using the nvs_keys partition.
+CONFIG_NVS_ENCRYPTION=y
+
+# Quieter logs
+CONFIG_LOG_DEFAULT_LEVEL_WARN=y

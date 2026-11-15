@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Dana Whitfield</title>
+<style>:root {
+  --bg: #f5f4f0; --panel: #ffffff; --ink: #1d1f23; --muted: #646a73; --line: #dcdad3;
+  --accent: #1f5fbf; --accent-ink: #ffffff; --ok: #1e8a4c; --off: #9aa0a8; --warn: #b45309; --bad: #b3261e;
+  --flash: #e6f0ff; --series: #2a78d6; --grid: #e6e4de;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171a; --panel: #1f2226; --ink: #e8e9eb; --muted: #9ba1aa; --line: #33373d;
+    --accent: #6ea4f4; --accent-ink: #10131a; --ok: #4cc27e; --off: #6b717a; --warn: #e0a04a; --bad: #f0857d;
+    --flash: #1d2b44; --series: #3987e5; --grid: #2b2f35;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, "Segoe UI", sans-serif; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+header.top { background: var(--panel); border-bottom: 1px solid var(--line); }
+header.top .bar { max-width: 1100px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; }
+header.top .brand { font-weight: 700; padding: 12px 0; margin-right: 8px; color: var(--ink); }
+header.top nav { display: flex; flex-wrap: wrap; gap: 2px; flex: 1; }
+header.top nav a { padding: 12px 10px; color: var(--muted); border-bottom: 2px solid transparent; }
+header.top nav a.on { color: var(--ink); border-bottom-color: var(--accent); }
+header.top form { margin: 0; }
+
+main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+h1 { font-size: 24px; margin: 4px 0 16px; }
+h2 { font-size: 17px; margin: 0 0 10px; }
+.sub { color: var(--muted); font-size: 13px; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.grid .card { margin: 0; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+
+.flash { background: var(--flash); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; overflow-wrap: anywhere; }
+.error { color: var(--bad); margin: 8px 0; }
+
+.tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+.tabs a { padding: 6px 14px; color: var(--muted); background: var(--panel); }
+.tabs a.on { background: var(--accent); color: var(--accent-ink); }
+
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.time { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--off); margin-right: 6px; }
+.dot.on { background: var(--ok); }
+.dot.bad { background: var(--bad); }
+.tag { display: inline-block; font-size: 12px; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); margin-left: 4px; white-space: nowrap; }
+.tag.warn { color: var(--warn); border-color: var(--warn); }
+.tag.bad { color: var(--bad); border-color: var(--bad); }
+
+.btnrow { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.btnrow:first-of-type { border-top: 0; }
+.btnrow .right { text-align: right; color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+label { display: block; font-weight: 600; font-size: 13px; margin: 10px 0 3px; }
+input[type=text], input[type=email], input[type=password], input[type=date], input[type=file], select, textarea {
+  width: 100%; padding: 8px 10px; font: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px;
+}
+textarea { min-height: 70px; }
+button, .button { display: inline-block; font: inherit; font-weight: 600; padding: 8px 14px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); margin-top: 12px; }
+button.plain { background: transparent; color: var(--accent); }
+button.danger { background: transparent; color: var(--bad); border-color: var(--bad); }
+button.link { border: 0; background: none; color: var(--muted); padding: 12px 0; margin: 0; font-weight: 400; }
+td button.link { padding: 0; }
+.inline { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.inline > div { flex: 1; min-width: 140px; }
+.inline button { margin-top: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions form { margin: 0; }
+.check { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 6px 0; }
+.check input { width: auto; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
+dt { color: var(--muted); }
+dd { margin: 0; overflow-wrap: anywhere; }
+.pager { display: flex; gap: 14px; align-items: center; margin-top: 12px; color: var(--muted); }
+.login { max-width: 360px; margin: 9vh auto 0; }
+.qr svg { background: #fff; border-radius: 6px; max-width: 220px; height: auto; }
+.empty { color: var(--muted); padding: 8px 0; }
+
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 8px; }
+.presets a { padding: 3px 11px; border: 1px solid var(--line); border-radius: 14px; color: var(--muted); font-size: 13px; }
+.presets a.on { border-color: var(--accent); color: var(--ink); }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 36px; margin: 4px 0 10px; }
+.stats b { display: block; font-size: 26px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.stats span { color: var(--muted); font-size: 13px; }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart .grid { stroke: var(--grid); stroke-width: 1; }
+.chart .grid.base { stroke: var(--line); }
+.chart .axis { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.chart .bar { fill: var(--series); }
+.chart .bar.lit { filter: brightness(1.18); }
+.chart .hit { fill: transparent; }
+.chart .tip { position: absolute; pointer-events: none; background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 6px; padding: 6px 10px; box-shadow: 0 4px 14px rgba(0, 0, 0, .14); white-space: nowrap; font-size: 13px; }
+.chart .tip b { display: block; font-size: 15px; }
+.chart .tip span { color: var(--muted); }
+.chart-table { margin-top: 10px; }
+.chart-table summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.chart-table .tablewrap { max-height: 320px; overflow-y: auto; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<header class="top"><div class="bar">
+  <a class="brand" href="overview-by-person.html">Button Notifier</a>
+  <nav>
+    
+    <a href="overview-by-person.html" class="">Overview</a>
+    
+    <a href="activity.html" class="">Activity</a>
+    
+    <a href="people.html" class="on">People</a>
+    
+    <a href="locations.html" class="">Locations</a>
+    
+    <a href="buttons.html" class="">Buttons</a>
+    
+    <a href="updates.html" class="">Updates</a>
+    
+    <a href="users.html" class="">Users</a>
+    <a href="account.html" class="">Account</a>
+  </nav>
+  <form onsubmit="return false" method="post" action="/logout"><input type="hidden" name="csrf" value="KgX9H4gd6kPKMsCLedYzYuqFh_DeBmbc"><button class="link">Sign out</button></form>
+</div></header>
+
+<main>
+
+
+<div class="sub"><a href="people.html">People</a></div>
+<h1>Dana Whitfield</h1>
+<div class="two">
+  <div>
+    <div class="card">
+      <h2>Buttons</h2>
+      
+  
+  <div class="btnrow">
+    <div><a href="button.html">Front desk</a><br><span class="sub"><span class="dot on"></span>Online</span></div>
+    <div class="right">Last press 4 minutes ago</div>
+  </div>
+  
+  <div class="btnrow">
+    <div><a href="#">Loading dock</a><br><span class="sub"><span class="dot"></span>Offline</span></div>
+    <div class="right">Last press just now</div>
+  </div>
+  
+
+    </div>
+    <div class="card">
+      <div class="head"><h2>Recent presses</h2><a href="#">All presses</a></div>
+      
+<div class="tablewrap"><table>
+  <thead><tr><th>Time</th><th>Button</th><th>Person</th><th>Location</th><th class="num">Delay</th></tr></thead>
+  <tbody>
+  
+  <tr>
+    <td class="time">2026-11-14 17:26:34 CST<span class="tag warn">approximate</span></td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">unknown</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 17:22:34 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">534 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 17:13:34 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">468 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 14:31:34 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">787 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 11:40:34 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">1.2 s</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 11:31:34 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">507 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 10:08:39 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">395 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 05:49:34 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">350 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 00:07:34 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">340 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-13 09:54:37 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">347 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-13 08:52:38 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">468 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-13 00:49:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">244 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-12 23:35:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">223 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-12 06:25:38 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">481 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-11 09:08:39 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">418 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-11 08:13:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">469 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-11 02:24:35 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">556 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-11 01:37:35 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">248 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 09:21:39 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">443 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 08:20:34 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">333 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 07:58:39 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">461 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 07:06:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">802 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 05:27:40 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">1.4 s</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 03:27:39 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">787 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 01:54:40 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">303 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 01:09:35 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">379 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 00:54:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">742 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-09 23:40:35 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">153 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-09 09:53:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">455 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-09 08:31:38 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">396 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-09 03:02:40 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">506 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-09 00:00:39 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">440 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-08 08:59:37 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">223 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-07 08:23:36 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">634 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-07 05:36:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">347 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-07 03:48:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">671 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-07 00:45:40 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">496 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 10:11:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">1.1 s</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 09:03:38 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">336 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 08:31:39 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">308 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 08:14:40 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">446 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 05:31:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">306 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 00:22:37 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">489 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-05 08:34:36 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">330 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-05 07:51:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">286 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-05 07:28:37 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">875 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-05 05:52:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">469 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-05 05:45:34 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">487 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-04 13:05:35 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">413 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-04 09:19:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">299 ms</td>
+  </tr>
+  
+  </tbody>
+</table></div>
+
+    </div>
+  </div>
+  
+  <div class="card">
+    <h2>Details</h2>
+    <form onsubmit="return false" method="post" action="/people/1">
+      <input type="hidden" name="csrf" value="KgX9H4gd6kPKMsCLedYzYuqFh_DeBmbc">
+      <label for="name">Name</label>
+<input type="text" id="name" name="name" maxlength="100" required value="Dana Whitfield">
+
+<label for="notes">Notes</label>
+<textarea id="notes" name="notes"></textarea>
+      <label class="check"><input type="checkbox" name="archived" value="1" > Archived (hidden from the overview and from new assignments)</label>
+      <button>Save</button>
+    </form>
+  </div>
+  
+</div>
+
+</main>
+</body>
+</html>

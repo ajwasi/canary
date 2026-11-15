@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block meta %}<meta http-equiv="refresh" content="30">{% endblock %}
+{% block title %}Overview{% endblock %}
+{% block body %}
+<div class="head"><h1>Overview</h1><span class="sub">Refreshes every 30 seconds</span></div>
+<div class="tabs">
+  <a href="/?by=person" class="{{ 'on' if by == 'person' }}">By person</a>
+  <a href="/?by=location" class="{{ 'on' if by == 'location' }}">By location</a>
+</div>
+<div class="grid">
+  {% for owner, buttons in groups %}
+  <div class="card">
+    <h2><a href="/{{ 'locations' if by == 'location' else 'people' }}/{{ owner.id }}">{{ owner.name }}</a></h2>
+    {% if by == "location" and owner.address %}<div class="sub">{{ owner.address }}</div>{% endif %}
+    {{ m.button_rows(buttons, counts) }}
+  </div>
+  {% endfor %}
+  {% if loose %}
+  <div class="card">
+    <h2>No {{ by }} assigned</h2>
+    {{ m.button_rows(loose, counts) }}
+  </div>
+  {% endif %}
+</div>
+{% if not groups and not loose %}
+<div class="card">Nothing here yet. Add <a href="/people">people</a> or <a href="/locations">locations</a>, then add <a href="/buttons">buttons</a>.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Button emulator</title>
+<style>
+  :root { --bg: #f1f0ec; --panel: #fff; --ink: #1d1f23; --muted: #646a73; --line: #d9d7cf; --accent: #1f5fbf;
+          --box: #f2c200; --box-edge: #c99d00; --cap: #c62828; --cap-down: #8e1c1c; --led-off: #b9bcc2; --led-on: #f5a623; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #15171a; --panel: #1f2226; --ink: #e8e9eb; --muted: #9ba1aa; --line: #33373d; --accent: #6ea4f4;
+            --box: #d4a900; --box-edge: #9c7c00; --led-off: #4a4e55; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, "Segoe UI", sans-serif; }
+  main { max-width: 1060px; margin: 0 auto; padding: 20px 16px 40px; display: grid; gap: 16px; grid-template-columns: minmax(280px, 340px) 1fr; }
+  @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+  h1 { font-size: 20px; margin: 0; } h2 { font-size: 15px; margin: 0 0 8px; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin-bottom: 16px; }
+  .unit { display: grid; justify-items: center; gap: 12px; }
+  .box { width: 220px; height: 220px; background: var(--box); border: 3px solid var(--box-edge); border-radius: 18px; position: relative; display: grid; place-items: center; }
+  .box.off { filter: saturate(.45) brightness(.9); }
+  .screw { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--box-edge); }
+  .screw.a { top: 12px; left: 12px; } .screw.b { top: 12px; right: 12px; } .screw.c { bottom: 12px; left: 12px; } .screw.d { bottom: 12px; right: 12px; }
+  #cap { width: 124px; height: 124px; border-radius: 50%; border: 0; background: var(--cap); cursor: pointer; touch-action: none;
+         box-shadow: 0 8px 0 var(--cap-down), 0 12px 14px rgba(0, 0, 0, .3); transition: transform .04s, box-shadow .04s; }
+  #cap.down { transform: translateY(6px); box-shadow: 0 2px 0 var(--cap-down), 0 4px 6px rgba(0, 0, 0, .3); }
+  #cap:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+  .ledrow { display: flex; align-items: center; gap: 8px; }
+  #led { width: 14px; height: 14px; border-radius: 50%; background: var(--led-off); }
+  #led.lit { background: var(--led-on); box-shadow: 0 0 8px var(--led-on); }
+  button.ctl { font: inherit; font-weight: 600; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+  button.ctl.solid { background: var(--accent); color: var(--panel); }
+  button.ctl.danger { border-color: #b3261e; color: #b3261e; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  label.sw { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 0; }
+  dt { color: var(--muted); } dd { margin: 0; overflow-wrap: anywhere; }
+  #setup { border-color: var(--accent); }
+  #log { font: 13px/1.5 ui-monospace, Consolas, monospace; max-height: 420px; overflow-y: auto; }
+  #log div { border-bottom: 1px solid var(--line); padding: 2px 0; } #log span { color: var(--muted); margin-right: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <section>
+    <div class="card unit">
+      <div><h1>Button emulator</h1><div class="sub" id="serial"></div></div>
+      <div class="box" id="box">
+        <i class="screw a"></i><i class="screw b"></i><i class="screw c"></i><i class="screw d"></i>
+        <button id="cap" aria-label="Push button"></button>
+      </div>
+      <div class="ledrow"><span id="led"></span><span id="ledtext" class="sub"></span></div>
+      <div class="sub">Click or hold the button. Space bar works too.</div>
+      <label class="sw"><input type="checkbox" id="mute"> Mute the speaker</label>
+    </div>
+    <div class="card">
+      <h2>Power</h2>
+      <div class="row">
+        <button class="ctl solid" id="power"></button>
+        <button class="ctl" id="powerhold" title="Powers on with the button held in, which opens setup mode">Power on, holding the button</button>
+      </div>
+      <p class="sub" id="holdnote" hidden>Holding the button… setup mode opens after the hold time.</p>
+    </div>
+    <div class="card">
+      <h2>Surroundings</h2>
+      <label class="sw"><input type="checkbox" id="wifi"> Site Wi-Fi and internet available</label>
+      <label class="sw"><input type="checkbox" id="clock"> Time server reachable</label>
+      <label class="sw"><input type="checkbox" id="ncwire"> Break the NC contact wire</label>
+    </div>
+    <div class="card">
+      <h2>Service</h2>
+      <div class="row">
+        <button class="ctl" id="renew">Renew certificate now</button>
+        <button class="ctl danger" id="reset">Factory reset</button>
+      </div>
+    </div>
+  </section>
+  <section>
+    <div class="card" id="setup" hidden>
+      <h2>Setup mode</h2>
+      <p>On real hardware you would join the Wi-Fi network <b id="apname"></b> with password <b id="appass"></b>.
+         Here, just open the unit's setup page: <a id="aplink" target="_blank" rel="noopener">open setup page</a></p>
+    </div>
+    <div class="card">
+      <h2>Unit state</h2>
+      <dl id="state"></dl>
+    </div>
+    <div class="card">
+      <h2>Log</h2>
+      <div id="log"></div>
+    </div>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const post = (action, body) => fetch("/api/" + action, { method: "POST", body: JSON.stringify(body || {}) });
+const LED = { off: ["Off", 0, 0], slow: ["Joining Wi-Fi", 500, 500], fast: ["Setup mode", 100, 100],
+              fault: ["Server unreachable", 900, 100], online: ["Online", 30, 4970] };
+let st = null, sounds = null, holding = false, ledTimer = null, ledMode = null, audioCtx = null;
+
+function beep() {                       // the firmware's built-in two-tone beep
+  audioCtx = audioCtx || new AudioContext();
+  let t = audioCtx.currentTime;
+  for (const [hz, ms] of [[880, 90], [1320, 140]]) {
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.frequency.value = hz; gain.gain.value = 0.15;
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t); osc.stop(t + ms / 1000); t += ms / 1000;
+  }
+}
+
+function setLed(mode) {
+  if (mode === ledMode) return;
+  ledMode = mode; clearTimeout(ledTimer);
+  const [text, on, off] = LED[mode] || LED.off;
+  $("ledtext").textContent = "Status LED: " + text;
+  const led = $("led");
+  if (!on) { led.classList.remove("lit"); return; }
+  const tick = lit => { led.classList.toggle("lit", lit); ledTimer = setTimeout(() => tick(!lit), lit ? on : off); };
+  tick(true);
+}
+
+function row(dl, k, v) {
+  const dt = document.createElement("dt"), dd = document.createElement("dd");
+  dt.textContent = k; dd.textContent = v; dl.append(dt, dd);
+}
+
+async function refresh() {
+  try { st = await (await fetch("/api/state")).json(); } catch (e) { return; }
+  $("serial").textContent = st.serial;
+  $("box").classList.toggle("off", !st.powered);
+  $("cap").classList.toggle("down", st.pressed);
+  setLed(st.led);
+  $("power").textContent = st.powered ? "Power off" : "Power on";
+  $("powerhold").hidden = st.powered;
+  $("wifi").checked = st.wifi_up; $("clock").checked = st.clock_up; $("ncwire").checked = st.nc_wire_broken;
+  if (holding && (st.mode === "setup" || !st.powered)) { holding = false; post("actuator", { down: false }); }
+  $("holdnote").hidden = !holding;
+  $("setup").hidden = st.mode !== "setup";
+  $("apname").textContent = st.ap_name; $("appass").textContent = st.ap_password;
+  $("aplink").href = location.protocol + "//" + location.hostname + ":" + (Number(location.port) + 1) + "/";
+
+  if (sounds !== null && st.sounds_played > sounds && !$("mute").checked) {
+    if (st.custom_sound) new Audio("/api/sound?" + Date.now()).play().catch(() => {}); else beep();
+  }
+  sounds = st.sounds_played;
+
+  const MODES = { off: "Powered off", boot: "Starting", setup: "Setup mode", wifi: "Joining Wi-Fi", enrol: "Enrolling with the server",
+                  online: "Online", "server-unreachable": "Wi-Fi up, server unreachable" };
+  const dl = $("state"); dl.textContent = "";
+  row(dl, "Mode", MODES[st.mode] || st.mode);
+  row(dl, "Name", st.name || "not set");
+  row(dl, "Firmware", st.fw + (st.fw_pending ? " (new, not yet confirmed)" : ""));
+  row(dl, "Boot count", st.boot);
+  row(dl, "Wi-Fi", st.joined || (st.ssid ? "not joined (configured: " + st.ssid + ")" : "not configured"));
+  row(dl, "Server", st.host || "not configured");
+  row(dl, "Clock", st.clock_set ? "set" : "not set");
+  row(dl, "Certificate", st.enrolled ? "valid until " + new Date(st.cert_expires).toLocaleString() : "none");
+  row(dl, "Presses waiting to send", st.queue);
+  row(dl, "Press sound", st.custom_sound ? "custom" : "built-in beep");
+  row(dl, "Wiring", st.nc_fault ? "fault detected" : "healthy");
+
+  const log = $("log"); log.textContent = "";
+  for (const [t, text] of st.events) {
+    const d = document.createElement("div"), s = document.createElement("span");
+    s.textContent = t; d.append(s, text); log.append(d);
+  }
+}
+
+const cap = $("cap");
+const down = () => { cap.classList.add("down"); post("actuator", { down: true }); };
+const up = () => { cap.classList.remove("down"); post("actuator", { down: false }); };
+cap.addEventListener("pointerdown", ev => { cap.setPointerCapture(ev.pointerId); down(); });
+cap.addEventListener("pointerup", up);
+cap.addEventListener("pointercancel", up);
+cap.addEventListener("keydown", ev => { if ((ev.key === " " || ev.key === "Enter") && !ev.repeat) { ev.preventDefault(); down(); } });
+cap.addEventListener("keyup", ev => { if (ev.key === " " || ev.key === "Enter") { ev.preventDefault(); up(); } });
+cap.addEventListener("click", ev => ev.preventDefault());
+
+$("power").onclick = () => post("power", { on: !st.powered });
+$("powerhold").onclick = () => { holding = true; post("power", { on: true, holding: true }); };
+$("wifi").onchange = ev => post("wifi", { up: ev.target.checked });
+$("clock").onchange = ev => post("clock", { up: ev.target.checked });
+$("ncwire").onchange = ev => post("nc_wire", { broken: ev.target.checked });
+$("renew").onclick = () => post("renew");
+$("reset").onclick = () => { if (confirm("Erase all settings, the certificate and unsent presses on this emulated unit?")) post("factory_reset"); };
+
+refresh(); setInterval(refresh, 400);
+</script>
+</body>
+</html>

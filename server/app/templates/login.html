@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block body %}
+<div class="card login">
+  <h1>Button Notifier</h1>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" action="/login">
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" value="{{ email or '' }}" required autofocus autocomplete="username">
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required autocomplete="current-password">
+    <label for="code">Authenticator code</label>
+    <input type="text" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" placeholder="Only if two-step sign-in is on">
+    <button>Sign in</button>
+  </form>
+</div>
+{% endblock %}

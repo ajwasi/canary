@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Buttons{% endblock %}
+{% block body %}
+<h1>Buttons</h1>
+<div class="card">
+  <div class="tablewrap"><table>
+    <thead><tr><th>Button</th><th>Status</th><th>Person</th><th>Location</th><th>Last press</th><th>Firmware</th></tr></thead>
+    <tbody>
+    {% for b in buttons %}
+    <tr>
+      <td><a href="/buttons/{{ b.id }}">{{ b.name }}</a><br><span class="sub">{{ b.serial or "not set up" }}</span></td>
+      <td>{{ m.status(b) }}</td>
+      <td>{% if b.person %}<a href="/people/{{ b.person_id }}">{{ b.person.name }}</a>{% endif %}</td>
+      <td>{% if b.location %}<a href="/locations/{{ b.location_id }}">{{ b.location.name }}</a>{% endif %}</td>
+      <td>{{ b.last_press_at | ago }}</td>
+      <td>{{ b.fw }}{% if b.target_fw and b.target_fw != b.fw %}<span class="tag warn">updating to {{ b.target_fw }}</span>{% endif %}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="empty">No buttons yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% if user.role != "viewer" %}
+<div class="card">
+  <h2>Add a button</h2>
+  <form method="post" action="/buttons" class="inline">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div><label for="name">Name</label><input type="text" id="name" name="name" maxlength="100" required></div>
+    {{ m.owner_selects(people, locations) }}
+    <button>Add and get claim code</button>
+  </form>
+  <div class="sub">You get a claim code to type into the button's setup page.</div>
+</div>
+{% endif %}
+{% endblock %}

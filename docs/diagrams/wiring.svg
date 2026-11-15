@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" font-family="Segoe UI, Arial, sans-serif" font-size="12">
+  <defs>
+    <g id="gnd"><line x1="0" y1="0" x2="0" y2="8" stroke="#111" stroke-width="2"/><line x1="-10" y1="8" x2="10" y2="8" stroke="#111" stroke-width="2"/><line x1="-6" y1="12" x2="6" y2="12" stroke="#111" stroke-width="2"/><line x1="-2" y1="16" x2="2" y2="16" stroke="#111" stroke-width="2"/></g>
+    <g id="v5"><rect x="-17" y="-9" width="34" height="18" rx="3" fill="#c62828"/><text x="0" y="4" text-anchor="middle" fill="#fff" font-weight="700" font-size="11">5V</text></g>
+    <g id="v33"><rect x="-17" y="-9" width="34" height="18" rx="3" fill="#ef6c00"/><text x="0" y="4" text-anchor="middle" fill="#fff" font-weight="700" font-size="11">3V3</text></g>
+  </defs>
+  <rect width="1200" height="720" fill="#ffffff"/>
+  <text x="30" y="34" font-size="18" font-weight="700" fill="#111">Button unit wiring — XIAO ESP32-C5, opto-isolated switch inputs, I2S amplifier</text>
+  <text x="30" y="54" fill="#555">Coloured tags are nets: every 5V tag is joined together, every 3V3 tag is joined together, every ground symbol is joined together.</text>
+
+  <!-- J1 power -->
+  <rect x="30" y="74" width="330" height="62" rx="6" fill="#f5f5f5" stroke="#333"/>
+  <text x="42" y="94" font-weight="700" fill="#111">J1 — 5 V DC in (2-way screw terminal)</text>
+  <text x="42" y="111" fill="#333">USB-C wall supply, 5 V 2 A, cable through gland</text>
+  <text x="42" y="127" fill="#333">C1 470 µF across 5V and GND at the terminal</text>
+  <line x1="360" y1="92" x2="400" y2="92" stroke="#c62828" stroke-width="2"/><use href="#v5" x="417" y="92"/>
+  <line x1="360" y1="118" x2="410" y2="118" stroke="#111" stroke-width="2"/><use href="#gnd" x="410" y="118"/>
+
+  <!-- ===== NO input stage ===== -->
+  <text x="30" y="166" font-weight="700" fill="#111">Press input (required)</text>
+  <use href="#v5" x="47" y="200"/>
+  <line x1="64" y1="200" x2="90" y2="200" stroke="#c62828" stroke-width="2"/>
+  <rect x="90" y="186" width="66" height="28" fill="#fff" stroke="#333"/><text x="123" y="204" text-anchor="middle" fill="#111">R1 330 Ω</text>
+  <line x1="156" y1="200" x2="186" y2="200" stroke="#c62828" stroke-width="2"/>
+  <rect x="186" y="178" width="112" height="44" rx="6" fill="#fff8e1" stroke="#333"/>
+  <text x="242" y="196" text-anchor="middle" font-weight="700" fill="#111">S1 — NO contact</text><text x="242" y="212" text-anchor="middle" fill="#333">terminals 3 – 4</text>
+  <line x1="298" y1="200" x2="336" y2="200" stroke="#c62828" stroke-width="2"/>
+  <rect x="336" y="178" width="100" height="74" fill="#e3f2fd" stroke="#333"/>
+  <text x="386" y="212" text-anchor="middle" font-weight="700" fill="#111">U1 PC817</text><text x="386" y="228" text-anchor="middle" fill="#333">optocoupler</text>
+  <text x="341" y="196" font-size="10" fill="#333">1 A</text><text x="341" y="246" font-size="10" fill="#333">2 K</text>
+  <text x="431" y="196" font-size="10" text-anchor="end" fill="#333">C 4</text><text x="431" y="246" font-size="10" text-anchor="end" fill="#333">E 3</text>
+  <polyline points="336,240 316,240 316,262" fill="none" stroke="#111" stroke-width="2"/><use href="#gnd" x="316" y="262"/>
+  <polyline points="436,240 456,240 456,262" fill="none" stroke="#111" stroke-width="2"/><use href="#gnd" x="456" y="262"/>
+  <line x1="436" y1="200" x2="600" y2="200" stroke="#1565c0" stroke-width="2"/>
+  <text x="556" y="194" font-size="10" fill="#1565c0">BTN_NO</text>
+  <circle cx="486" cy="200" r="3" fill="#1565c0"/>
+  <line x1="486" y1="200" x2="486" y2="172" stroke="#1565c0" stroke-width="2"/>
+  <rect x="458" y="146" width="56" height="26" fill="#fff" stroke="#333"/><text x="486" y="163" text-anchor="middle" fill="#111">R2 10 k</text>
+  <line x1="486" y1="146" x2="486" y2="132" stroke="#ef6c00" stroke-width="2"/><use href="#v33" x="486" y="123"/>
+  <circle cx="530" cy="200" r="3" fill="#1565c0"/>
+  <line x1="530" y1="200" x2="530" y2="222" stroke="#1565c0" stroke-width="2"/>
+  <rect x="500" y="222" width="60" height="26" fill="#fff" stroke="#333"/><text x="530" y="239" text-anchor="middle" fill="#111">C2 100 nF</text>
+  <line x1="530" y1="248" x2="530" y2="262" stroke="#111" stroke-width="2"/><use href="#gnd" x="530" y="262"/>
+
+  <!-- ===== NC input stage ===== -->
+  <rect x="22" y="318" width="552" height="216" rx="8" fill="none" stroke="#888" stroke-dasharray="6 4"/>
+  <text x="34" y="338" font-weight="700" fill="#111">Wire-break monitor (optional — needs an NC contact block)</text>
+  <use href="#v5" x="47" y="420"/>
+  <line x1="64" y1="420" x2="90" y2="420" stroke="#c62828" stroke-width="2"/>
+  <rect x="90" y="406" width="66" height="28" fill="#fff" stroke="#333"/><text x="123" y="424" text-anchor="middle" fill="#111">R3 330 Ω</text>
+  <line x1="156" y1="420" x2="186" y2="420" stroke="#c62828" stroke-width="2"/>
+  <rect x="186" y="398" width="112" height="44" rx="6" fill="#fff8e1" stroke="#333"/>
+  <text x="242" y="416" text-anchor="middle" font-weight="700" fill="#111">S1 — NC contact</text><text x="242" y="432" text-anchor="middle" fill="#333">terminals 1 – 2</text>
+  <line x1="298" y1="420" x2="336" y2="420" stroke="#c62828" stroke-width="2"/>
+  <rect x="336" y="398" width="100" height="74" fill="#e3f2fd" stroke="#333"/>
+  <text x="386" y="432" text-anchor="middle" font-weight="700" fill="#111">U2 PC817</text><text x="386" y="448" text-anchor="middle" fill="#333">optocoupler</text>
+  <text x="341" y="416" font-size="10" fill="#333">1 A</text><text x="341" y="466" font-size="10" fill="#333">2 K</text>
+  <text x="431" y="416" font-size="10" text-anchor="end" fill="#333">C 4</text><text x="431" y="466" font-size="10" text-anchor="end" fill="#333">E 3</text>
+  <polyline points="336,460 316,460 316,482" fill="none" stroke="#111" stroke-width="2"/><use href="#gnd" x="316" y="482"/>
+  <polyline points="436,460 456,460 456,482" fill="none" stroke="#111" stroke-width="2"/><use href="#gnd" x="456" y="482"/>
+  <polyline points="436,420 584,420 584,250 600,250" fill="none" stroke="#6a1b9a" stroke-width="2"/>
+  <text x="540" y="414" font-size="10" fill="#6a1b9a" text-anchor="end">BTN_NC</text>
+  <circle cx="486" cy="420" r="3" fill="#6a1b9a"/>
+  <line x1="486" y1="420" x2="486" y2="392" stroke="#6a1b9a" stroke-width="2"/>
+  <rect x="458" y="366" width="56" height="26" fill="#fff" stroke="#333"/><text x="486" y="383" text-anchor="middle" fill="#111">R4 10 k</text>
+  <line x1="486" y1="366" x2="486" y2="358" stroke="#ef6c00" stroke-width="2"/><use href="#v33" x="486" y="349"/>
+  <circle cx="530" cy="420" r="3" fill="#6a1b9a"/>
+  <line x1="530" y1="420" x2="530" y2="442" stroke="#6a1b9a" stroke-width="2"/>
+  <rect x="500" y="442" width="60" height="26" fill="#fff" stroke="#333"/><text x="530" y="459" text-anchor="middle" fill="#111">C3 100 nF</text>
+  <line x1="530" y1="468" x2="530" y2="482" stroke="#111" stroke-width="2"/><use href="#gnd" x="530" y="482"/>
+
+  <!-- ===== XIAO ===== -->
+  <rect x="600" y="78" width="200" height="38" rx="6" fill="#f5f5f5" stroke="#333"/>
+  <text x="700" y="94" text-anchor="middle" font-weight="700" fill="#111">ANT1 — dual-band antenna</text><text x="700" y="109" text-anchor="middle" fill="#333">2.4 / 5 GHz flex, U.FL lead</text>
+  <line x1="700" y1="116" x2="700" y2="160" stroke="#2e7d32" stroke-width="2"/>
+  <rect x="600" y="160" width="200" height="380" rx="8" fill="#e8f5e9" stroke="#333" stroke-width="1.5"/>
+  <text x="700" y="182" text-anchor="middle" font-weight="700" font-size="13" fill="#111">M1 — XIAO ESP32-C5</text>
+  <text x="700" y="528" text-anchor="middle" font-size="10" fill="#555">USB-C port: bench flashing only</text>
+  <g fill="#111">
+    <text x="608" y="204">D0 · GPIO1</text>
+    <text x="608" y="254">D1 · GPIO0</text>
+    <text x="608" y="304" fill="#888">D2 · GPIO25 (strap)</text>
+    <text x="608" y="354" fill="#888">D3 · GPIO7 (strap)</text>
+    <text x="608" y="404" fill="#888">D4 · GPIO23 free</text>
+    <text x="608" y="454" fill="#888">D5 · GPIO24 free</text>
+    <text x="608" y="504" fill="#888">D6 · GPIO11 free</text>
+    <text x="792" y="204" text-anchor="end">5V</text>
+    <text x="792" y="254" text-anchor="end">GND</text>
+    <text x="792" y="304" text-anchor="end">3V3 out</text>
+    <text x="792" y="354" text-anchor="end">GPIO10 · D10</text>
+    <text x="792" y="404" text-anchor="end">GPIO9 · D9</text>
+    <text x="792" y="454" text-anchor="end">GPIO8 · D8</text>
+    <text x="792" y="504" text-anchor="end">GPIO12 · D7</text>
+  </g>
+  <!-- XIAO power pins -->
+  <line x1="800" y1="200" x2="838" y2="200" stroke="#c62828" stroke-width="2"/><use href="#v5" x="855" y="200"/>
+  <polyline points="800,250 850,250 850,262" fill="none" stroke="#111" stroke-width="2"/><use href="#gnd" x="850" y="262"/>
+  <line x1="800" y1="300" x2="838" y2="300" stroke="#ef6c00" stroke-width="2"/><use href="#v33" x="855" y="300"/>
+
+  <!-- ===== Amplifier ===== -->
+  <rect x="960" y="160" width="200" height="380" rx="8" fill="#fce4ec" stroke="#333" stroke-width="1.5"/>
+  <text x="1060" y="182" text-anchor="middle" font-weight="700" font-size="13" fill="#111">A1 — MAX98357A</text>
+  <text x="1060" y="528" text-anchor="middle" font-size="10" fill="#555">I2S class-D amplifier breakout</text>
+  <g fill="#111">
+    <text x="968" y="204">VIN</text>
+    <text x="968" y="254">GND</text>
+    <text x="968" y="304" fill="#888">GAIN — leave open (9 dB)</text>
+    <text x="968" y="354">DIN</text>
+    <text x="968" y="404">LRC</text>
+    <text x="968" y="454">BCLK</text>
+    <text x="968" y="504">SD</text>
+  </g>
+  <use href="#v5" x="905" y="200"/><line x1="922" y1="200" x2="960" y2="200" stroke="#c62828" stroke-width="2"/>
+  <polyline points="960,250 915,250 915,262" fill="none" stroke="#111" stroke-width="2"/><use href="#gnd" x="915" y="262"/>
+  <line x1="800" y1="350" x2="960" y2="350" stroke="#00838f" stroke-width="2"/><text x="880" y="344" text-anchor="middle" font-size="10" fill="#00838f">I2S data</text>
+  <line x1="800" y1="400" x2="960" y2="400" stroke="#00838f" stroke-width="2"/><text x="880" y="394" text-anchor="middle" font-size="10" fill="#00838f">I2S word clock</text>
+  <line x1="800" y1="450" x2="960" y2="450" stroke="#00838f" stroke-width="2"/><text x="880" y="444" text-anchor="middle" font-size="10" fill="#00838f">I2S bit clock</text>
+  <line x1="800" y1="500" x2="960" y2="500" stroke="#ad1457" stroke-width="2"/><text x="880" y="494" text-anchor="middle" font-size="10" fill="#ad1457">amp enable</text>
+
+  <!-- Speaker -->
+  <line x1="1020" y1="540" x2="1020" y2="590" stroke="#333" stroke-width="2"/><line x1="1100" y1="540" x2="1100" y2="590" stroke="#333" stroke-width="2"/>
+  <text x="1012" y="570" text-anchor="end" font-size="10" fill="#333">OUT+</text><text x="1108" y="570" font-size="10" fill="#333">OUT−</text>
+  <rect x="960" y="590" width="200" height="50" rx="6" fill="#f5f5f5" stroke="#333"/>
+  <text x="1060" y="611" text-anchor="middle" font-weight="700" fill="#111">LS1 — speaker</text><text x="1060" y="628" text-anchor="middle" fill="#333">28–32 mm, 4–8 Ω, 2–3 W</text>
+
+  <!-- Notes -->
+  <text x="30" y="580" font-weight="700" fill="#111">Notes</text>
+  <text x="30" y="600" fill="#333">• Each contact switches 5 V at about 11.5 mA, above the A22N minimum applicable load (10 mA at 5 VDC).</text>
+  <text x="30" y="618" fill="#333">• Pressed: NO closes, U1 conducts, BTN_NO reads LOW. At rest: NC closed, BTN_NC reads LOW.</text>
+  <text x="30" y="636" fill="#333">• Never power J1 and the XIAO USB-C port at the same time.</text>
+  <text x="30" y="654" fill="#333">• D2 and D3 are boot-strapping pins: leave them unconnected.</text>
+  <text x="30" y="672" fill="#333">• The speaker outputs are bridge-tied: connect neither speaker wire to ground.</text>
+</svg>

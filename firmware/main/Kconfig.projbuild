@@ -1,0 +1,23 @@
+menu "Button notifier"
+
+    config BTN_DEFAULT_SERVER_HOST
+        string "Default server host name"
+        default "buttons.example.com"
+        help
+            Pre-filled in the setup page. Serves HTTPS on 443 and MQTT/TLS on BTN_MQTT_PORT.
+
+    config BTN_MQTT_PORT
+        int "MQTT over TLS port"
+        default 8883
+
+    config BTN_MONITOR_NC
+        bool "Monitor the NC contact for wire breaks"
+        default n
+        help
+            Enable when an NC contact block and the second optocoupler (U2) are fitted.
+
+    config BTN_DEBOUNCE_MS
+        int "Debounce time in ms"
+        default 30
+
+endmenu

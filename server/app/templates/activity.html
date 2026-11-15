@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Activity{% endblock %}
+{% block body %}
+<div class="head"><h1>Activity</h1><a href="/activity.csv?{{ query }}">Download CSV</a></div>
+<div class="card">
+  <form method="get" action="/activity" class="inline">
+    <div><label for="person">Person</label><select name="person" id="person"><option value="">All</option>
+      {% for p in people %}<option value="{{ p.id }}" {{ 'selected' if filters.get('person') == p.id|string }}>{{ p.name }}</option>{% endfor %}</select></div>
+    <div><label for="location">Location</label><select name="location" id="location"><option value="">All</option>
+      {% for l in locations %}<option value="{{ l.id }}" {{ 'selected' if filters.get('location') == l.id|string }}>{{ l.name }}</option>{% endfor %}</select></div>
+    <div><label for="button">Button</label><select name="button" id="button"><option value="">All</option>
+      {% for b in buttons %}<option value="{{ b.id }}" {{ 'selected' if filters.get('button') == b.id|string }}>{{ b.name }}</option>{% endfor %}</select></div>
+    <div><label for="start">From</label><input type="date" name="start" id="start" value="{{ filters.get('start', '') }}"></div>
+    <div><label for="end">To</label><input type="date" name="end" id="end" value="{{ filters.get('end', '') }}"></div>
+    <div><label for="group">Chart bars</label><select name="group" id="group"><option value="">Automatic</option>
+      {% for g in groups %}<option value="{{ g }}" {{ 'selected' if filters.get('group') == g }}>Per {{ g }}</option>{% endfor %}</select></div>
+    <button>Apply</button>
+  </form>
+  <div class="presets">{% for label, q, on in presets %}<a href="/activity?{{ q }}" class="{{ 'on' if on }}">{{ label }}</a>{% endfor %}</div>
+  <div class="sub">Date filters use {{ tz }}. Each press is shown in its location's time zone.</div>
+</div>
+{% include "_chart.html" %}
+<div class="card">
+  <h2>Presses</h2>
+  {{ m.press_table(presses) }}
+  <div class="pager">
+    <span>{{ total }} press{{ '' if total == 1 else 'es' }}</span>
+    {% if page > 1 %}<a href="/activity?{{ query }}&page={{ page - 1 }}">Newer</a>{% endif %}
+    {% if pages > 1 %}<span>Page {{ page }} of {{ pages }}</span>{% endif %}
+    {% if page < pages %}<a href="/activity?{{ query }}&page={{ page + 1 }}">Older</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

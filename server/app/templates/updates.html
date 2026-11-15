@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Updates{% endblock %}
+{% block body %}
+<h1>Updates</h1>
+{% set can_edit = user.role != "viewer" %}
+<div class="two">
+  <div class="card">
+    <h2>Firmware</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Version</th><th class="num">Size</th><th>Uploaded</th><th></th></tr></thead>
+      <tbody>
+      {% for f in firmware %}
+      <tr><td>{{ f.version }}</td><td class="num">{{ (f.size / 1024) | round | int }} KB</td><td>{{ f.uploaded_at | localtime }}</td>
+        <td>{% if can_edit %}<form method="post" action="/updates/firmware/{{ f.id }}/delete"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link">Delete</button></form>{% endif %}</td></tr>
+      {% else %}<tr><td colspan="4" class="empty">No firmware uploaded.</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+    {% if can_edit %}
+    <form method="post" action="/updates/firmware" enctype="multipart/form-data">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label for="version">Version</label><input type="text" id="version" name="version" maxlength="31" required placeholder="Must match the version built into the file">
+      <label for="fwfile">Signed image (.bin)</label><input type="file" id="fwfile" name="file" accept=".bin" required>
+      <button>Upload firmware</button>
+    </form>
+    {% endif %}
+  </div>
+  <div class="card">
+    <h2>Press sounds</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Name</th><th class="num">Size</th><th>Uploaded</th><th></th></tr></thead>
+      <tbody>
+      {% for c in clips %}
+      <tr><td><a href="/files/audio/{{ c.token }}.wav">{{ c.name }}</a></td><td class="num">{{ (c.size / 1024) | round | int }} KB</td><td>{{ c.uploaded_at | localtime }}</td>
+        <td>{% if can_edit %}<form method="post" action="/updates/audio/{{ c.id }}/delete"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link">Delete</button></form>{% endif %}</td></tr>
+      {% else %}<tr><td colspan="4" class="empty">No sounds uploaded. Buttons use the built-in beep.</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+    {% if can_edit %}
+    <form method="post" action="/updates/audio" enctype="multipart/form-data">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label for="clipname">Name</label><input type="text" id="clipname" name="name" maxlength="100">
+      <label for="wavfile">WAV file (16-bit PCM, up to 1.5 MB)</label><input type="file" id="wavfile" name="file" accept=".wav" required>
+      <button>Upload sound</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% if can_edit %}
+<div class="card">
+  <h2>Send to buttons</h2>
+  {% if not buttons %}
+  <div class="empty">No buttons are set up yet.</div>
+  {% else %}
+  {% for kind, label, items in [("firmware", "Firmware", firmware), ("audio", "Press sound", clips)] %}
+  {% if items %}
+  <form method="post" action="/updates/push">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="hidden" name="kind" value="{{ kind }}">
+    <label for="item-{{ kind }}">{{ label }}</label>
+    <select name="item" id="item-{{ kind }}">
+      {% for it in items %}<option value="{{ it.id }}">{{ it.version if kind == "firmware" else it.name }}</option>{% endfor %}
+    </select>
+    <label>Buttons</label>
+    {% for b in buttons %}
+    <label class="check"><input type="checkbox" name="targets" value="{{ b.id }}" checked> {{ b.name }}
+      <span class="sub">{{ ("firmware " ~ (b.fw or "unknown")) if kind == "firmware" else ("custom sound" if b.audio_sha else "built-in beep") }}, {{ "online" if b.online else "offline" }}</span></label>
+    {% endfor %}
+    <button>Send {{ label | lower }}</button>
+  </form>
+  {% endif %}
+  {% endfor %}
+  {% if not firmware and not clips %}<div class="empty">Upload firmware or a sound first.</div>{% endif %}
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

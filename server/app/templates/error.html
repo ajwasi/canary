@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Problem{% endblock %}
+{% block body %}
+<div class="card login">
+  <h1>{{ "Not found" if code == 404 else "That did not work" }}</h1>
+  <p>{{ detail }}</p>
+  <p>Use your browser's Back button to return, or go to the <a href="/">overview</a>.</p>
+</div>
+{% endblock %}

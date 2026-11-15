@@ -1,0 +1,59 @@
+{% macro bars(c, title, aria, table_head) %}
+  <div class="chart">
+    <svg viewBox="0 0 {{ c.w }} {{ c.h }}" role="img" aria-label="{{ aria }}">
+      {% for t in c.y_ticks %}
+      <line class="grid{{ ' base' if loop.first }}" x1="{{ c.left }}" x2="{{ c.right }}" y1="{{ t.y }}" y2="{{ t.y }}"/>
+      <text class="axis" x="{{ c.left - 8 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ t.text }}</text>
+      {% endfor %}
+      {% for l in c.x_labels %}
+      <text class="axis" x="{{ l.x }}" y="{{ c.base + 18 }}" text-anchor="middle">{{ l.text }}</text>
+      {% endfor %}
+      {% for b in c.bars %}{% if b.path %}<path class="bar" data-i="{{ b.i }}" d="{{ b.path }}"/>{% endif %}{% endfor %}
+      {% for b in c.bars %}
+      <rect class="hit" data-i="{{ b.i }}" data-value="{{ b.value }}" data-label="{{ b.label }}" x="{{ b.hit_x }}" y="{{ c.top }}" width="{{ b.hit_w }}" height="{{ c.plot_h }}"><title>{{ b.label }}: {{ b.value }}</title></rect>
+      {% endfor %}
+    </svg>
+    <div class="tip" hidden><b></b><span></span></div>
+  </div>
+  <details class="chart-table">
+    <summary>Show these numbers as a table</summary>
+    <div class="tablewrap"><table>
+      <thead><tr><th>{{ title | capitalize }}</th><th class="num">{{ table_head }}</th></tr></thead>
+      <tbody>{% for label, value in c.table %}<tr><td>{{ label }}</td><td class="num">{{ value }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </details>
+{% endmacro %}
+
+{% if chart %}
+<div class="card">
+  <div class="head">
+    <h2>Presses per {{ chart.group }}</h2>
+    <span class="sub">{{ chart.range }} · {{ chart.tz }}</span>
+  </div>
+  <div class="stats">
+    <div><b>{{ chart.total }}</b><span>press{{ '' if chart.total == 1 else 'es' }} in range</span></div>
+    {% if chart.peak %}<div><b>{{ chart.peak }}</b><span>busiest {{ chart.group }}: {{ chart.busiest }}</span></div>{% endif %}
+  </div>
+  {{ bars(chart.counts, chart.group, "Bar chart of presses per " ~ chart.group ~ ", " ~ chart.range ~ ". " ~ chart.total ~ " presses in total.", "Presses") }}
+</div>
+{% if chart.delay %}
+{% set s = chart.delay_stats %}
+<div class="card">
+  <div class="head">
+    <h2>Delivery delay per {{ chart.group }}</h2>
+    <span class="sub">Time from the press to the server receiving it</span>
+  </div>
+  <div class="stats">
+    <div><b>{{ s.typical }}</b><span>typical (median)</span></div>
+    <div><b>{{ s.p95 }}</b><span>95% arrive within</span></div>
+    <div><b>{{ s.slowest }}</b><span>slowest</span></div>
+    <div><b>{{ s.late }}</b><span>arrived over 1 minute late</span></div>
+  </div>
+  {{ bars(chart.delay, chart.group, "Bar chart of the typical delivery delay per " ~ chart.group ~ ". Typical delay overall " ~ s.typical ~ ", slowest " ~ s.slowest ~ ".", "Delay") }}
+  <p class="sub">Each bar is the typical (median) delay in that {{ chart.group }}. Long delays mean presses waited on the button while its Wi-Fi or the server was unreachable.{% if s.untimed %} {{ s.untimed }} press{{ '' if s.untimed == 1 else 'es' }} with an unknown press time {{ 'is' if s.untimed == 1 else 'are' }} left out.{% endif %}</p>
+</div>
+{% endif %}
+<script src="/static/chart.js" defer></script>
+{% else %}
+<div class="card empty">No presses to chart for these filters.</div>
+{% endif %}

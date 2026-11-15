@@ -1,0 +1,46 @@
+{% macro status(b) -%}
+  {%- if b.revoked %}<span class="dot bad"></span>Revoked
+  {%- elif not b.serial %}<span class="dot"></span>Waiting for setup
+  {%- elif b.online %}<span class="dot on"></span>Online
+  {%- else %}<span class="dot"></span>Offline{% endif -%}
+  {%- if b.nc_fault and b.online %}<span class="tag bad">wiring fault</span>{% endif -%}
+{%- endmacro %}
+
+{% macro button_rows(buttons, counts) %}
+  {% for b in buttons %}
+  <div class="btnrow">
+    <div><a href="/buttons/{{ b.id }}">{{ b.name }}</a><br><span class="sub">{{ status(b) }}</span></div>
+    <div class="right">Last press {{ b.last_press_at | ago }}{% if counts is not none %}<br>{{ counts.get(b.id, 0) }} in 24 h{% endif %}</div>
+  </div>
+  {% else %}
+  <div class="empty">No buttons.</div>
+  {% endfor %}
+{% endmacro %}
+
+{% macro press_table(presses, show_button=true) %}
+<div class="tablewrap"><table>
+  <thead><tr><th>Time</th>{% if show_button %}<th>Button</th>{% endif %}<th>Person</th><th>Location</th><th class="num">Delay</th></tr></thead>
+  <tbody>
+  {% for p in presses %}
+  <tr>
+    <td class="time">{{ p | press_time }}{% if p.approximate %}<span class="tag warn">approximate</span>{% endif %}</td>
+    {% if show_button %}<td><a href="/buttons/{{ p.button_id }}">{{ p.button.name }}</a></td>{% endif %}
+    <td>{% if p.person %}<a href="/people/{{ p.person_id }}">{{ p.person.name }}</a>{% endif %}</td>
+    <td>{% if p.location %}<a href="/locations/{{ p.location_id }}">{{ p.location.name }}</a>{% endif %}</td>
+    <td class="num">{{ p.delay_s | delay }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5" class="empty">No presses recorded.</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endmacro %}
+
+{% macro owner_selects(people, locations, person_id=None, location_id=None) %}
+<div><label for="person_id">Person</label>
+  <select name="person_id" id="person_id"><option value="">None</option>
+  {% for p in people %}<option value="{{ p.id }}" {{ 'selected' if p.id == person_id }}>{{ p.name }}</option>{% endfor %}</select></div>
+<div><label for="location_id">Location</label>
+  <select name="location_id" id="location_id"><option value="">None</option>
+  {% for l in locations %}<option value="{{ l.id }}" {{ 'selected' if l.id == location_id }}>{{ l.name }}</option>{% endfor %}</select></div>
+{% endmacro %}

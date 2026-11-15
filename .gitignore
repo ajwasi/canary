@@ -1,0 +1,15 @@
+firmware/build/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/managed_components/
+firmware/dependencies.lock
+*.pem
+server/.venv/
+server/data/
+server/sim_state/
+server/.env
+__pycache__/
+.pytest_cache/
+emulator/state/
+docs/datasheets/*.pdf
+docs/datasheets/*.xlsx

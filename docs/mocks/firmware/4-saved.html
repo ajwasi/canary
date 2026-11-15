@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Button setup</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #f4f4f1; color: #1c1c1c; }
+  main { max-width: 440px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font-size: 22px; margin: 8px 0 2px; }
+  .serial { color: #666; font-size: 13px; margin-bottom: 18px; }
+  label { display: block; font-weight: 600; font-size: 14px; margin: 14px 0 4px; }
+  input, select, button { width: 100%; box-sizing: border-box; font-size: 16px; padding: 10px; border: 1px solid #b9b9b3; border-radius: 6px; background: #fff; }
+  button { margin-top: 20px; background: #1f5fbf; color: #fff; border: 0; font-weight: 600; }
+  button:disabled { background: #9aa9c0; }
+  .hint { color: #666; font-size: 12px; margin-top: 3px; }
+  .row { display: flex; gap: 8px; } .row select { flex: 1; } .row button { width: auto; margin: 0; background: #555; }
+  #msg { margin-top: 16px; padding: 10px; border-radius: 6px; display: none; }
+  #msg.ok { display: block; background: #e2f3e4; } #msg.err { display: block; background: #fbe3e1; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Button setup</h1>
+  <div class="serial" id="serial"></div>
+  <form id="f">
+    <label for="name">Button name</label>
+    <input id="name" maxlength="32" required placeholder="Front desk">
+
+    <label for="ssid">Wi-Fi network</label>
+    <div class="row">
+      <select id="ssid" required><option value="">Scanning…</option></select>
+      <button type="button" id="rescan">Rescan</button>
+    </div>
+    <div class="hint">Only WPA2 and WPA3 networks can be used. Open and WEP networks are listed as unavailable.</div>
+
+    <label for="pass">Wi-Fi password</label>
+    <input id="pass" type="password" minlength="8" maxlength="63" required autocomplete="off">
+
+    <label for="host">Server address</label>
+    <input id="host" maxlength="128" required>
+
+    <label for="claim">Claim code</label>
+    <input id="claim" maxlength="64" autocomplete="off">
+    <div class="hint" id="claimhint">From the server's "Add button" page.</div>
+
+    <button id="save">Save and restart</button>
+  </form>
+  <div id="msg"></div>
+</main>
+<script>
+const STATE = "saved";
+const NETWORKS = [
+  {ssid: "Warehouse-Staff", rssi: -48, band5: true, secure: true}, {ssid: "Warehouse-Staff", rssi: -44, band5: false, secure: true},
+  {ssid: "Scanner-Net", rssi: -61, band5: false, secure: true}, {ssid: "Tulsa-Guest", rssi: -57, band5: false, secure: false},
+  {ssid: "NETGEAR-2G", rssi: -79, band5: false, secure: true}];
+const reply = data => ({json: async () => data});
+window.fetch = async url => {
+  if (url === "/info") return reply({serial: "BTN-A1B2C3D4E5F6", fw: "0.1.0", host: "buttons.example.com",
+                                     name: STATE === "reclaim" ? "Front desk" : "", enrolled: STATE === "reclaim"});
+  if (url === "/scan") return STATE === "scanning" ? new Promise(() => {}) : reply(NETWORKS);
+  if (STATE === "lost") throw new Error("offline");
+  return reply({ok: true});
+};
+window.addEventListener("load", () => setTimeout(() => {
+  if (STATE === "empty" || STATE === "scanning") return;
+  const set = (id, v) => { document.getElementById(id).value = v; };
+  set("name", "Front desk"); set("ssid", "Warehouse-Staff"); set("pass", "blue-forklift-42");
+  if (STATE !== "reclaim") set("claim", "K7Q2-9XPD");
+  if (STATE === "saved" || STATE === "lost") document.getElementById("f").requestSubmit();
+}, 150));
+</script>
+<script>
+const $ = id => document.getElementById(id);
+let enrolled = false;
+
+async function info() {
+  const i = await (await fetch('/info')).json();
+  $('serial').textContent = 'Serial ' + i.serial + ' · firmware ' + i.fw;
+  $('name').value = i.name || '';
+  $('host').value = i.host || '';
+  enrolled = i.enrolled;
+  $('claim').required = !enrolled;
+  if (enrolled) $('claimhint').textContent = 'Already claimed. Leave empty unless the server issued a new code.';
+}
+
+async function scan() {
+  const sel = $('ssid');
+  sel.innerHTML = '<option value="">Scanning…</option>';
+  try {
+    const best = {};
+    for (const a of await (await fetch('/scan')).json()) {
+      if (a.ssid && (!best[a.ssid] || a.rssi > best[a.ssid].rssi || (a.band5 && !best[a.ssid].band5)))
+        best[a.ssid] = Object.assign({}, a, { band5: a.band5 || (best[a.ssid] && best[a.ssid].band5) });
+    }
+    const list = Object.values(best).sort((x, y) => y.rssi - x.rssi);
+    sel.innerHTML = '<option value="">Choose a network</option>';
+    for (const a of list) {
+      const o = document.createElement('option');
+      o.value = a.ssid;
+      o.textContent = a.ssid + (a.band5 ? ' (5 GHz)' : '') + (a.secure ? '' : ' (not secure, unavailable)');
+      o.disabled = !a.secure;
+      sel.appendChild(o);
+    }
+  } catch (e) {
+    sel.innerHTML = '<option value="">Scan failed. Press Rescan.</option>';
+  }
+}
+
+function show(text, ok) { const m = $('msg'); m.textContent = text; m.className = ok ? 'ok' : 'err'; }
+
+$('rescan').onclick = scan;
+$('f').onsubmit = async ev => {
+  ev.preventDefault();
+  $('save').disabled = true;
+  const body = { name: $('name').value.trim(), ssid: $('ssid').value, pass: $('pass').value,
+                 host: $('host').value.trim(), claim: $('claim').value.trim() };
+  try {
+    const r = await fetch('/save', { method: 'POST', body: JSON.stringify(body) });
+    const j = await r.json();
+    if (j.ok) show('Saved. The button is restarting and will join ' + body.ssid + '. You can close this page.', true);
+    else { show(j.error || 'Could not save.', false); $('save').disabled = false; }
+  } catch (e) { show('Could not reach the button. Reconnect to its Wi-Fi and try again.', false); $('save').disabled = false; }
+};
+
+info(); scan();
+</script>
+</body>
+</html>

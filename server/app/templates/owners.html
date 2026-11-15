@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ k.title }}{% endblock %}
+{% block body %}
+<h1>{{ k.title }}</h1>
+<div class="two">
+  <div class="card">
+    <div class="tablewrap"><table>
+      <thead><tr><th>Name</th><th class="num">Buttons</th><th>Last press</th></tr></thead>
+      <tbody>
+      {% for it in items %}
+      <tr>
+        <td><a href="/{{ kind }}/{{ it.id }}">{{ it.name }}</a>{% if it.archived %}<span class="tag">archived</span>{% endif %}
+          {% if kind == "locations" and it.address %}<br><span class="sub">{{ it.address }}</span>{% endif %}</td>
+        <td class="num">{{ it.buttons | length }}</td>
+        <td>{{ last.get(it.id) | ago }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3" class="empty">None yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+  {% if user.role != "viewer" %}
+  <div class="card">
+    <h2>Add a {{ k.one }}</h2>
+    <form method="post" action="/{{ kind }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      {% include "_owner_fields.html" %}
+      <button>Add {{ k.one }}</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+# Production stack. Copy .env.example to .env, fill it in, then: docker compose up -d
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on: [app]
+
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://buttons:${POSTGRES_PASSWORD}@db/buttons
+      PUBLIC_URL: https://${DOMAIN}
+      SECRET_KEY: ${SECRET_KEY}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      DEFAULT_TZ: ${DEFAULT_TZ:-UTC}
+      MQTT_HOST: mosquitto
+    volumes:
+      - app_data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports: ["8883:8883"]          # 1883 is deliberately not published: it is for the app only
+    environment:
+      DOMAIN: ${DOMAIN}
+    entrypoint: ["/bin/sh", "/run.sh"]
+    volumes:
+      - ./mosquitto/run.sh:/run.sh:ro
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/devices.acl:/mosquitto/config/devices.acl:ro
+      - caddy_data:/caddy:ro
+      - app_data:/appdata:ro
+      - mosquitto_data:/mosquitto/data
+    depends_on: [app, caddy]
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: buttons
+      POSTGRES_DB: buttons
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U buttons"]
+      interval: 5s
+      retries: 12
+
+volumes:
+  caddy_data:
+  app_data:
+  mosquitto_data:
+  pg_data:

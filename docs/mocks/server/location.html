@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Tulsa warehouse</title>
+<style>:root {
+  --bg: #f5f4f0; --panel: #ffffff; --ink: #1d1f23; --muted: #646a73; --line: #dcdad3;
+  --accent: #1f5fbf; --accent-ink: #ffffff; --ok: #1e8a4c; --off: #9aa0a8; --warn: #b45309; --bad: #b3261e;
+  --flash: #e6f0ff; --series: #2a78d6; --grid: #e6e4de;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171a; --panel: #1f2226; --ink: #e8e9eb; --muted: #9ba1aa; --line: #33373d;
+    --accent: #6ea4f4; --accent-ink: #10131a; --ok: #4cc27e; --off: #6b717a; --warn: #e0a04a; --bad: #f0857d;
+    --flash: #1d2b44; --series: #3987e5; --grid: #2b2f35;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, "Segoe UI", sans-serif; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+header.top { background: var(--panel); border-bottom: 1px solid var(--line); }
+header.top .bar { max-width: 1100px; margin: 0 auto; padding: 0 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; }
+header.top .brand { font-weight: 700; padding: 12px 0; margin-right: 8px; color: var(--ink); }
+header.top nav { display: flex; flex-wrap: wrap; gap: 2px; flex: 1; }
+header.top nav a { padding: 12px 10px; color: var(--muted); border-bottom: 2px solid transparent; }
+header.top nav a.on { color: var(--ink); border-bottom-color: var(--accent); }
+header.top form { margin: 0; }
+
+main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+h1 { font-size: 24px; margin: 4px 0 16px; }
+h2 { font-size: 17px; margin: 0 0 10px; }
+.sub { color: var(--muted); font-size: 13px; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.grid .card { margin: 0; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+
+.flash { background: var(--flash); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; overflow-wrap: anywhere; }
+.error { color: var(--bad); margin: 8px 0; }
+
+.tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+.tabs a { padding: 6px 14px; color: var(--muted); background: var(--panel); }
+.tabs a.on { background: var(--accent); color: var(--accent-ink); }
+
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.time { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--off); margin-right: 6px; }
+.dot.on { background: var(--ok); }
+.dot.bad { background: var(--bad); }
+.tag { display: inline-block; font-size: 12px; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); margin-left: 4px; white-space: nowrap; }
+.tag.warn { color: var(--warn); border-color: var(--warn); }
+.tag.bad { color: var(--bad); border-color: var(--bad); }
+
+.btnrow { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.btnrow:first-of-type { border-top: 0; }
+.btnrow .right { text-align: right; color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+label { display: block; font-weight: 600; font-size: 13px; margin: 10px 0 3px; }
+input[type=text], input[type=email], input[type=password], input[type=date], input[type=file], select, textarea {
+  width: 100%; padding: 8px 10px; font: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px;
+}
+textarea { min-height: 70px; }
+button, .button { display: inline-block; font: inherit; font-weight: 600; padding: 8px 14px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); margin-top: 12px; }
+button.plain { background: transparent; color: var(--accent); }
+button.danger { background: transparent; color: var(--bad); border-color: var(--bad); }
+button.link { border: 0; background: none; color: var(--muted); padding: 12px 0; margin: 0; font-weight: 400; }
+td button.link { padding: 0; }
+.inline { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.inline > div { flex: 1; min-width: 140px; }
+.inline button { margin-top: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions form { margin: 0; }
+.check { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 6px 0; }
+.check input { width: auto; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
+dt { color: var(--muted); }
+dd { margin: 0; overflow-wrap: anywhere; }
+.pager { display: flex; gap: 14px; align-items: center; margin-top: 12px; color: var(--muted); }
+.login { max-width: 360px; margin: 9vh auto 0; }
+.qr svg { background: #fff; border-radius: 6px; max-width: 220px; height: auto; }
+.empty { color: var(--muted); padding: 8px 0; }
+
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 8px; }
+.presets a { padding: 3px 11px; border: 1px solid var(--line); border-radius: 14px; color: var(--muted); font-size: 13px; }
+.presets a.on { border-color: var(--accent); color: var(--ink); }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 36px; margin: 4px 0 10px; }
+.stats b { display: block; font-size: 26px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.stats span { color: var(--muted); font-size: 13px; }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart .grid { stroke: var(--grid); stroke-width: 1; }
+.chart .grid.base { stroke: var(--line); }
+.chart .axis { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.chart .bar { fill: var(--series); }
+.chart .bar.lit { filter: brightness(1.18); }
+.chart .hit { fill: transparent; }
+.chart .tip { position: absolute; pointer-events: none; background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 6px; padding: 6px 10px; box-shadow: 0 4px 14px rgba(0, 0, 0, .14); white-space: nowrap; font-size: 13px; }
+.chart .tip b { display: block; font-size: 15px; }
+.chart .tip span { color: var(--muted); }
+.chart-table { margin-top: 10px; }
+.chart-table summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.chart-table .tablewrap { max-height: 320px; overflow-y: auto; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<header class="top"><div class="bar">
+  <a class="brand" href="overview-by-person.html">Button Notifier</a>
+  <nav>
+    
+    <a href="overview-by-person.html" class="">Overview</a>
+    
+    <a href="activity.html" class="">Activity</a>
+    
+    <a href="people.html" class="">People</a>
+    
+    <a href="locations.html" class="on">Locations</a>
+    
+    <a href="buttons.html" class="">Buttons</a>
+    
+    <a href="updates.html" class="">Updates</a>
+    
+    <a href="users.html" class="">Users</a>
+    <a href="account.html" class="">Account</a>
+  </nav>
+  <form onsubmit="return false" method="post" action="/logout"><input type="hidden" name="csrf" value="KgX9H4gd6kPKMsCLedYzYuqFh_DeBmbc"><button class="link">Sign out</button></form>
+</div></header>
+
+<main>
+
+
+<div class="sub"><a href="locations.html">Locations</a></div>
+<h1>Tulsa warehouse</h1>
+<div class="two">
+  <div>
+    <div class="card">
+      <h2>Buttons</h2>
+      
+  
+  <div class="btnrow">
+    <div><a href="button.html">Front desk</a><br><span class="sub"><span class="dot on"></span>Online</span></div>
+    <div class="right">Last press 4 minutes ago</div>
+  </div>
+  
+  <div class="btnrow">
+    <div><a href="#">Loading dock</a><br><span class="sub"><span class="dot"></span>Offline</span></div>
+    <div class="right">Last press just now</div>
+  </div>
+  
+
+    </div>
+    <div class="card">
+      <div class="head"><h2>Recent presses</h2><a href="#">All presses</a></div>
+      
+<div class="tablewrap"><table>
+  <thead><tr><th>Time</th><th>Button</th><th>Person</th><th>Location</th><th class="num">Delay</th></tr></thead>
+  <tbody>
+  
+  <tr>
+    <td class="time">2026-11-14 17:26:34 CST<span class="tag warn">approximate</span></td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">unknown</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 17:22:34 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">534 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 17:13:34 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">468 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 14:31:34 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">787 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 11:40:34 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">1.2 s</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 11:31:34 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">507 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 10:08:39 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">395 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 05:49:34 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">350 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-14 00:07:34 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">340 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-13 09:54:37 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">347 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-13 08:52:38 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">468 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-13 00:49:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">244 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-12 23:35:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">223 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-12 06:25:38 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">481 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-11 09:08:39 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">418 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-11 08:13:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">469 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-11 02:24:35 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">556 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-11 01:37:35 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">248 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 09:21:39 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">443 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 08:20:34 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">333 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 07:58:39 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">461 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 07:06:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">802 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 05:27:40 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">1.4 s</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 03:27:39 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">787 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 01:54:40 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">303 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 01:09:35 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">379 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-10 00:54:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">742 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-09 23:40:35 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">153 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-09 09:53:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">455 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-09 08:31:38 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">396 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-09 03:02:40 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">506 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-09 00:00:39 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">440 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-08 08:59:37 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">223 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-07 08:23:36 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">634 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-07 05:36:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">347 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-07 03:48:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">671 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-07 00:45:40 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">496 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 10:11:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">1.1 s</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 09:03:38 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">336 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 08:31:39 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">308 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 08:14:40 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">446 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 05:31:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">306 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-06 00:22:37 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">489 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-05 08:34:36 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">330 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-05 07:51:36 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">286 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-05 07:28:37 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">875 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-05 05:52:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">469 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-05 05:45:34 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">487 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-04 13:05:35 CST</td>
+    <td><a href="#">Loading dock</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">413 ms</td>
+  </tr>
+  
+  <tr>
+    <td class="time">2026-11-04 09:19:35 CST</td>
+    <td><a href="button.html">Front desk</a></td>
+    <td><a href="person.html">Dana Whitfield</a></td>
+    <td><a href="location.html">Tulsa warehouse</a></td>
+    <td class="num">299 ms</td>
+  </tr>
+  
+  </tbody>
+</table></div>
+
+    </div>
+  </div>
+  
+  <div class="card">
+    <h2>Details</h2>
+    <form onsubmit="return false" method="post" action="/locations/1">
+      <input type="hidden" name="csrf" value="KgX9H4gd6kPKMsCLedYzYuqFh_DeBmbc">
+      <label for="name">Name</label>
+<input type="text" id="name" name="name" maxlength="100" required value="Tulsa warehouse">
+
+<label for="address">Address</label>
+<input type="text" id="address" name="address" maxlength="300" value="410 E Archer St, Tulsa, OK">
+<label for="timezone_name">Time zone</label>
+<input type="text" id="timezone_name" name="timezone_name" list="tzlist" placeholder="For example America/Chicago" value="America/Chicago">
+<datalist id="tzlist"><option value="Africa/Abidjan"><option value="Africa/Accra"><option value="Africa/Addis_Ababa"><option value="Africa/Algiers"><option value="Africa/Asmara"><option value="Africa/Asmera"><option value="Africa/Bamako"><option value="Africa/Bangui"><option value="Africa/Banjul"><option value="Africa/Bissau"><option value="Africa/Blantyre"><option value="Africa/Brazzaville"><option value="Africa/Bujumbura"><option value="Africa/Cairo"><option value="Africa/Casablanca"><option value="Africa/Ceuta"><option value="Africa/Conakry"><option value="Africa/Dakar"><option value="Africa/Dar_es_Salaam"><option value="Africa/Djibouti"><option value="Africa/Douala"><option value="Africa/El_Aaiun"><option value="Africa/Freetown"><option value="Africa/Gaborone"><option value="Africa/Harare"><option value="Africa/Johannesburg"><option value="Africa/Juba"><option value="Africa/Kampala"><option value="Africa/Khartoum"><option value="Africa/Kigali"><option value="Africa/Kinshasa"><option value="Africa/Lagos"><option value="Africa/Libreville"><option value="Africa/Lome"><option value="Africa/Luanda"><option value="Africa/Lubumbashi"><option value="Africa/Lusaka"><option value="Africa/Malabo"><option value="Africa/Maputo"><option value="Africa/Maseru"><option value="Africa/Mbabane"><option value="Africa/Mogadishu"><option value="Africa/Monrovia"><option value="Africa/Nairobi"><option value="Africa/Ndjamena"><option value="Africa/Niamey"><option value="Africa/Nouakchott"><option value="Africa/Ouagadougou"><option value="Africa/Porto-Novo"><option value="Africa/Sao_Tome"><option value="Africa/Timbuktu"><option value="Africa/Tripoli"><option value="Africa/Tunis"><option value="Africa/Windhoek"><option value="America/Adak"><option value="America/Anchorage"><option value="America/Anguilla"><option value="America/Antigua"><option value="America/Araguaina"><option value="America/Argentina/Buenos_Aires"><option value="America/Argentina/Catamarca"><option value="America/Argentina/ComodRivadavia"><option value="America/Argentina/Cordoba"><option value="America/Argentina/Jujuy"><option value="America/Argentina/La_Rioja"><option value="America/Argentina/Mendoza"><option value="America/Argentina/Rio_Gallegos"><option value="America/Argentina/Salta"><option value="America/Argentina/San_Juan"><option value="America/Argentina/San_Luis"><option value="America/Argentina/Tucuman"><option value="America/Argentina/Ushuaia"><option value="America/Aruba"><option value="America/Asuncion"><option value="America/Atikokan"><option value="America/Atka"><option value="America/Bahia"><option value="America/Bahia_Banderas"><option value="America/Barbados"><option value="America/Belem"><option value="America/Belize"><option value="America/Blanc-Sablon"><option value="America/Boa_Vista"><option value="America/Bogota"><option value="America/Boise"><option value="America/Buenos_Aires"><option value="America/Cambridge_Bay"><option value="America/Campo_Grande"><option value="America/Cancun"><option value="America/Caracas"><option value="America/Catamarca"><option value="America/Cayenne"><option value="America/Cayman"><option value="America/Chicago"><option value="America/Chihuahua"><option value="America/Ciudad_Juarez"><option value="America/Coral_Harbour"><option value="America/Cordoba"><option value="America/Costa_Rica"><option value="America/Creston"><option value="America/Cuiaba"><option value="America/Curacao"><option value="America/Danmarkshavn"><option value="America/Dawson"><option value="America/Dawson_Creek"><option value="America/Denver"><option value="America/Detroit"><option value="America/Dominica"><option value="America/Edmonton"><option value="America/Eirunepe"><option value="America/El_Salvador"><option value="America/Ensenada"><option value="America/Fort_Nelson"><option value="America/Fort_Wayne"><option value="America/Fortaleza"><option value="America/Glace_Bay"><option value="America/Godthab"><option value="America/Goose_Bay"><option value="America/Grand_Turk"><option value="America/Grenada"><option value="America/Guadeloupe"><option value="America/Guatemala"><option value="America/Guayaquil"><option value="America/Guyana"><option value="America/Halifax"><option value="America/Havana"><option value="America/Hermosillo"><option value="America/Indiana/Indianapolis"><option value="America/Indiana/Knox"><option value="America/Indiana/Marengo"><option value="America/Indiana/Petersburg"><option value="America/Indiana/Tell_City"><option value="America/Indiana/Vevay"><option value="America/Indiana/Vincennes"><option value="America/Indiana/Winamac"><option value="America/Indianapolis"><option value="America/Inuvik"><option value="America/Iqaluit"><option value="America/Jamaica"><option value="America/Jujuy"><option value="America/Juneau"><option value="America/Kentucky/Louisville"><option value="America/Kentucky/Monticello"><option value="America/Knox_IN"><option value="America/Kralendijk"><option value="America/La_Paz"><option value="America/Lima"><option value="America/Los_Angeles"><option value="America/Louisville"><option value="America/Lower_Princes"><option value="America/Maceio"><option value="America/Managua"><option value="America/Manaus"><option value="America/Marigot"><option value="America/Martinique"><option value="America/Matamoros"><option value="America/Mazatlan"><option value="America/Mendoza"><option value="America/Menominee"><option value="America/Merida"><option value="America/Metlakatla"><option value="America/Mexico_City"><option value="America/Miquelon"><option value="America/Moncton"><option value="America/Monterrey"><option value="America/Montevideo"><option value="America/Montreal"><option value="America/Montserrat"><option value="America/Nassau"><option value="America/New_York"><option value="America/Nipigon"><option value="America/Nome"><option value="America/Noronha"><option value="America/North_Dakota/Beulah"><option value="America/North_Dakota/Center"><option value="America/North_Dakota/New_Salem"><option value="America/Nuuk"><option value="America/Ojinaga"><option value="America/Panama"><option value="America/Pangnirtung"><option value="America/Paramaribo"><option value="America/Phoenix"><option value="America/Port-au-Prince"><option value="America/Port_of_Spain"><option value="America/Porto_Acre"><option value="America/Porto_Velho"><option value="America/Puerto_Rico"><option value="America/Punta_Arenas"><option value="America/Rainy_River"><option value="America/Rankin_Inlet"><option value="America/Recife"><option value="America/Regina"><option value="America/Resolute"><option value="America/Rio_Branco"><option value="America/Rosario"><option value="America/Santa_Isabel"><option value="America/Santarem"><option value="America/Santiago"><option value="America/Santo_Domingo"><option value="America/Sao_Paulo"><option value="America/Scoresbysund"><option value="America/Shiprock"><option value="America/Sitka"><option value="America/St_Barthelemy"><option value="America/St_Johns"><option value="America/St_Kitts"><option value="America/St_Lucia"><option value="America/St_Thomas"><option value="America/St_Vincent"><option value="America/Swift_Current"><option value="America/Tegucigalpa"><option value="America/Thule"><option value="America/Thunder_Bay"><option value="America/Tijuana"><option value="America/Toronto"><option value="America/Tortola"><option value="America/Vancouver"><option value="America/Virgin"><option value="America/Whitehorse"><option value="America/Winnipeg"><option value="America/Yakutat"><option value="America/Yellowknife"><option value="Antarctica/Casey"><option value="Antarctica/Davis"><option value="Antarctica/DumontDUrville"><option value="Antarctica/Macquarie"><option value="Antarctica/Mawson"><option value="Antarctica/McMurdo"><option value="Antarctica/Palmer"><option value="Antarctica/Rothera"><option value="Antarctica/South_Pole"><option value="Antarctica/Syowa"><option value="Antarctica/Troll"><option value="Antarctica/Vostok"><option value="Arctic/Longyearbyen"><option value="Asia/Aden"><option value="Asia/Almaty"><option value="Asia/Amman"><option value="Asia/Anadyr"><option value="Asia/Aqtau"><option value="Asia/Aqtobe"><option value="Asia/Ashgabat"><option value="Asia/Ashkhabad"><option value="Asia/Atyrau"><option value="Asia/Baghdad"><option value="Asia/Bahrain"><option value="Asia/Baku"><option value="Asia/Bangkok"><option value="Asia/Barnaul"><option value="Asia/Beirut"><option value="Asia/Bishkek"><option value="Asia/Brunei"><option value="Asia/Calcutta"><option value="Asia/Chita"><option value="Asia/Choibalsan"><option value="Asia/Chongqing"><option value="Asia/Chungking"><option value="Asia/Colombo"><option value="Asia/Dacca"><option value="Asia/Damascus"><option value="Asia/Dhaka"><option value="Asia/Dili"><option value="Asia/Dubai"><option value="Asia/Dushanbe"><option value="Asia/Famagusta"><option value="Asia/Gaza"><option value="Asia/Harbin"><option value="Asia/Hebron"><option value="Asia/Ho_Chi_Minh"><option value="Asia/Hong_Kong"><option value="Asia/Hovd"><option value="Asia/Irkutsk"><option value="Asia/Istanbul"><option value="Asia/Jakarta"><option value="Asia/Jayapura"><option value="Asia/Jerusalem"><option value="Asia/Kabul"><option value="Asia/Kamchatka"><option value="Asia/Karachi"><option value="Asia/Kashgar"><option value="Asia/Kathmandu"><option value="Asia/Katmandu"><option value="Asia/Khandyga"><option value="Asia/Kolkata"><option value="Asia/Krasnoyarsk"><option value="Asia/Kuala_Lumpur"><option value="Asia/Kuching"><option value="Asia/Kuwait"><option value="Asia/Macao"><option value="Asia/Macau"><option value="Asia/Magadan"><option value="Asia/Makassar"><option value="Asia/Manila"><option value="Asia/Muscat"><option value="Asia/Nicosia"><option value="Asia/Novokuznetsk"><option value="Asia/Novosibirsk"><option value="Asia/Omsk"><option value="Asia/Oral"><option value="Asia/Phnom_Penh"><option value="Asia/Pontianak"><option value="Asia/Pyongyang"><option value="Asia/Qatar"><option value="Asia/Qostanay"><option value="Asia/Qyzylorda"><option value="Asia/Rangoon"><option value="Asia/Riyadh"><option value="Asia/Saigon"><option value="Asia/Sakhalin"><option value="Asia/Samarkand"><option value="Asia/Seoul"><option value="Asia/Shanghai"><option value="Asia/Singapore"><option value="Asia/Srednekolymsk"><option value="Asia/Taipei"><option value="Asia/Tashkent"><option value="Asia/Tbilisi"><option value="Asia/Tehran"><option value="Asia/Tel_Aviv"><option value="Asia/Thimbu"><option value="Asia/Thimphu"><option value="Asia/Tokyo"><option value="Asia/Tomsk"><option value="Asia/Ujung_Pandang"><option value="Asia/Ulaanbaatar"><option value="Asia/Ulan_Bator"><option value="Asia/Urumqi"><option value="Asia/Ust-Nera"><option value="Asia/Vientiane"><option value="Asia/Vladivostok"><option value="Asia/Yakutsk"><option value="Asia/Yangon"><option value="Asia/Yekaterinburg"><option value="Asia/Yerevan"><option value="Atlantic/Azores"><option value="Atlantic/Bermuda"><option value="Atlantic/Canary"><option value="Atlantic/Cape_Verde"><option value="Atlantic/Faeroe"><option value="Atlantic/Faroe"><option value="Atlantic/Jan_Mayen"><option value="Atlantic/Madeira"><option value="Atlantic/Reykjavik"><option value="Atlantic/South_Georgia"><option value="Atlantic/St_Helena"><option value="Atlantic/Stanley"><option value="Australia/ACT"><option value="Australia/Adelaide"><option value="Australia/Brisbane"><option value="Australia/Broken_Hill"><option value="Australia/Canberra"><option value="Australia/Currie"><option value="Australia/Darwin"><option value="Australia/Eucla"><option value="Australia/Hobart"><option value="Australia/LHI"><option value="Australia/Lindeman"><option value="Australia/Lord_Howe"><option value="Australia/Melbourne"><option value="Australia/NSW"><option value="Australia/North"><option value="Australia/Perth"><option value="Australia/Queensland"><option value="Australia/South"><option value="Australia/Sydney"><option value="Australia/Tasmania"><option value="Australia/Victoria"><option value="Australia/West"><option value="Australia/Yancowinna"><option value="Brazil/Acre"><option value="Brazil/DeNoronha"><option value="Brazil/East"><option value="Brazil/West"><option value="CET"><option value="CST6CDT"><option value="Canada/Atlantic"><option value="Canada/Central"><option value="Canada/Eastern"><option value="Canada/Mountain"><option value="Canada/Newfoundland"><option value="Canada/Pacific"><option value="Canada/Saskatchewan"><option value="Canada/Yukon"><option value="Chile/Continental"><option value="Chile/EasterIsland"><option value="Cuba"><option value="EET"><option value="EST"><option value="EST5EDT"><option value="Egypt"><option value="Eire"><option value="Etc/GMT"><option value="Etc/GMT+0"><option value="Etc/GMT+1"><option value="Etc/GMT+10"><option value="Etc/GMT+11"><option value="Etc/GMT+12"><option value="Etc/GMT+2"><option value="Etc/GMT+3"><option value="Etc/GMT+4"><option value="Etc/GMT+5"><option value="Etc/GMT+6"><option value="Etc/GMT+7"><option value="Etc/GMT+8"><option value="Etc/GMT+9"><option value="Etc/GMT-0"><option value="Etc/GMT-1"><option value="Etc/GMT-10"><option value="Etc/GMT-11"><option value="Etc/GMT-12"><option value="Etc/GMT-13"><option value="Etc/GMT-14"><option value="Etc/GMT-2"><option value="Etc/GMT-3"><option value="Etc/GMT-4"><option value="Etc/GMT-5"><option value="Etc/GMT-6"><option value="Etc/GMT-7"><option value="Etc/GMT-8"><option value="Etc/GMT-9"><option value="Etc/GMT0"><option value="Etc/Greenwich"><option value="Etc/UCT"><option value="Etc/UTC"><option value="Etc/Universal"><option value="Etc/Zulu"><option value="Europe/Amsterdam"><option value="Europe/Andorra"><option value="Europe/Astrakhan"><option value="Europe/Athens"><option value="Europe/Belfast"><option value="Europe/Belgrade"><option value="Europe/Berlin"><option value="Europe/Bratislava"><option value="Europe/Brussels"><option value="Europe/Bucharest"><option value="Europe/Budapest"><option value="Europe/Busingen"><option value="Europe/Chisinau"><option value="Europe/Copenhagen"><option value="Europe/Dublin"><option value="Europe/Gibraltar"><option value="Europe/Guernsey"><option value="Europe/Helsinki"><option value="Europe/Isle_of_Man"><option value="Europe/Istanbul"><option value="Europe/Jersey"><option value="Europe/Kaliningrad"><option value="Europe/Kiev"><option value="Europe/Kirov"><option value="Europe/Kyiv"><option value="Europe/Lisbon"><option value="Europe/Ljubljana"><option value="Europe/London"><option value="Europe/Luxembourg"><option value="Europe/Madrid"><option value="Europe/Malta"><option value="Europe/Mariehamn"><option value="Europe/Minsk"><option value="Europe/Monaco"><option value="Europe/Moscow"><option value="Europe/Nicosia"><option value="Europe/Oslo"><option value="Europe/Paris"><option value="Europe/Podgorica"><option value="Europe/Prague"><option value="Europe/Riga"><option value="Europe/Rome"><option value="Europe/Samara"><option value="Europe/San_Marino"><option value="Europe/Sarajevo"><option value="Europe/Saratov"><option value="Europe/Simferopol"><option value="Europe/Skopje"><option value="Europe/Sofia"><option value="Europe/Stockholm"><option value="Europe/Tallinn"><option value="Europe/Tirane"><option value="Europe/Tiraspol"><option value="Europe/Ulyanovsk"><option value="Europe/Uzhgorod"><option value="Europe/Vaduz"><option value="Europe/Vatican"><option value="Europe/Vienna"><option value="Europe/Vilnius"><option value="Europe/Volgograd"><option value="Europe/Warsaw"><option value="Europe/Zagreb"><option value="Europe/Zaporozhye"><option value="Europe/Zurich"><option value="Factory"><option value="GB"><option value="GB-Eire"><option value="GMT"><option value="GMT+0"><option value="GMT-0"><option value="GMT0"><option value="Greenwich"><option value="HST"><option value="Hongkong"><option value="Iceland"><option value="Indian/Antananarivo"><option value="Indian/Chagos"><option value="Indian/Christmas"><option value="Indian/Cocos"><option value="Indian/Comoro"><option value="Indian/Kerguelen"><option value="Indian/Mahe"><option value="Indian/Maldives"><option value="Indian/Mauritius"><option value="Indian/Mayotte"><option value="Indian/Reunion"><option value="Iran"><option value="Israel"><option value="Jamaica"><option value="Japan"><option value="Kwajalein"><option value="Libya"><option value="MET"><option value="MST"><option value="MST7MDT"><option value="Mexico/BajaNorte"><option value="Mexico/BajaSur"><option value="Mexico/General"><option value="NZ"><option value="NZ-CHAT"><option value="Navajo"><option value="PRC"><option value="PST8PDT"><option value="Pacific/Apia"><option value="Pacific/Auckland"><option value="Pacific/Bougainville"><option value="Pacific/Chatham"><option value="Pacific/Chuuk"><option value="Pacific/Easter"><option value="Pacific/Efate"><option value="Pacific/Enderbury"><option value="Pacific/Fakaofo"><option value="Pacific/Fiji"><option value="Pacific/Funafuti"><option value="Pacific/Galapagos"><option value="Pacific/Gambier"><option value="Pacific/Guadalcanal"><option value="Pacific/Guam"><option value="Pacific/Honolulu"><option value="Pacific/Johnston"><option value="Pacific/Kanton"><option value="Pacific/Kiritimati"><option value="Pacific/Kosrae"><option value="Pacific/Kwajalein"><option value="Pacific/Majuro"><option value="Pacific/Marquesas"><option value="Pacific/Midway"><option value="Pacific/Nauru"><option value="Pacific/Niue"><option value="Pacific/Norfolk"><option value="Pacific/Noumea"><option value="Pacific/Pago_Pago"><option value="Pacific/Palau"><option value="Pacific/Pitcairn"><option value="Pacific/Pohnpei"><option value="Pacific/Ponape"><option value="Pacific/Port_Moresby"><option value="Pacific/Rarotonga"><option value="Pacific/Saipan"><option value="Pacific/Samoa"><option value="Pacific/Tahiti"><option value="Pacific/Tarawa"><option value="Pacific/Tongatapu"><option value="Pacific/Truk"><option value="Pacific/Wake"><option value="Pacific/Wallis"><option value="Pacific/Yap"><option value="Poland"><option value="Portugal"><option value="ROC"><option value="ROK"><option value="Singapore"><option value="Turkey"><option value="UCT"><option value="US/Alaska"><option value="US/Aleutian"><option value="US/Arizona"><option value="US/Central"><option value="US/East-Indiana"><option value="US/Eastern"><option value="US/Hawaii"><option value="US/Indiana-Starke"><option value="US/Michigan"><option value="US/Mountain"><option value="US/Pacific"><option value="US/Samoa"><option value="UTC"><option value="Universal"><option value="W-SU"><option value="WET"><option value="Zulu"></datalist>
+
+<label for="notes">Notes</label>
+<textarea id="notes" name="notes">Dock door 3 is the night entrance.</textarea>
+      <label class="check"><input type="checkbox" name="archived" value="1" > Archived (hidden from the overview and from new assignments)</label>
+      <button>Save</button>
+    </form>
+  </div>
+  
+</div>
+
+</main>
+</body>
+</html>

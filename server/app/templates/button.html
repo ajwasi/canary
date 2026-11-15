@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ b.name }}{% endblock %}
+{% block body %}
+<div class="sub"><a href="/buttons">Buttons</a></div>
+<h1>{{ b.name }}</h1>
+<div class="two">
+  <div>
+    <div class="card">
+      <h2>Status</h2>
+      <dl>
+        <dt>State</dt><dd>{{ m.status(b) }}</dd>
+        <dt>Serial</dt><dd>{{ b.serial or "Not set up yet" }}</dd>
+        {% if not b.serial or b.claim_hash %}
+        <dt>Claim code</dt><dd>{% if b.claim_hash and b.claim_expires > now %}Issued, valid until {{ b.claim_expires | localtime }}{% else %}None active{% endif %}</dd>
+        {% endif %}
+        <dt>Last seen</dt><dd>{{ b.last_seen | ago }}</dd>
+        <dt>Last press</dt><dd>{{ b.last_press_at | localtime(b.location.timezone if b.location else None) }}</dd>
+        {% if b.serial %}
+        <dt>Firmware</dt><dd>{{ b.fw or "unknown" }}{% if b.target_fw and b.target_fw != b.fw %}<span class="tag warn">updating to {{ b.target_fw }}</span>{% endif %}</dd>
+        <dt>Press sound</dt><dd>{{ "Custom" if b.audio_sha else "Built-in beep" }}{% if b.target_audio_sha and b.target_audio_sha != b.audio_sha %}<span class="tag warn">update pending</span>{% endif %}</dd>
+        <dt>Wi-Fi</dt><dd>{% if b.rssi is not none %}{{ b.rssi }} dBm, {{ "5 GHz" if b.channel and b.channel > 14 else "2.4 GHz" }} channel {{ b.channel }}{% else %}unknown{% endif %}</dd>
+        <dt>Address</dt><dd>{{ b.ip or "unknown" }}</dd>
+        <dt>Certificate</dt><dd>Valid until {{ b.cert_not_after | localtime }}</dd>
+        <dt>Unsent presses</dt><dd>{{ b.pending }}</dd>
+        {% endif %}
+      </dl>
+    </div>
+    <div class="card">
+      <div class="head"><h2>Recent presses</h2><a href="/activity?button={{ b.id }}">All presses</a></div>
+      {{ m.press_table(presses, show_button=false) }}
+    </div>
+  </div>
+  {% if user.role != "viewer" %}
+  <div>
+    <div class="card">
+      <h2>Details</h2>
+      <form method="post" action="/buttons/{{ b.id }}">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label for="name">Name</label><input type="text" id="name" name="name" maxlength="100" required value="{{ b.name }}">
+        {{ m.owner_selects(people, locations, b.person_id, b.location_id) }}
+        <button>Save</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Actions</h2>
+      <div class="actions">
+        {% for action, label, cls, show in [
+          ("identify", "Play sound", "plain", b.serial and not b.revoked),
+          ("reboot", "Restart", "plain", b.serial and not b.revoked),
+          ("claim", "New claim code", "plain", not b.revoked),
+          ("revoke", "Revoke", "danger", not b.revoked),
+          ("restore", "Restore", "plain", b.revoked),
+          ("delete", "Delete", "danger", not presses)] %}
+        {% if show %}
+        <form method="post" action="/buttons/{{ b.id }}/{{ action }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="{{ cls }}">{{ label }}</button></form>
+        {% endif %}
+        {% endfor %}
+      </div>
+      <p class="sub">A new claim code is needed to set the unit up again or to replace it with a new unit. Revoking stops presses being recorded at once; the unit's certificate then expires within {{ cert_days }} days.</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

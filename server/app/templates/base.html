@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% block meta %}{% endblock %}
+<title>{% block title %}Buttons{% endblock %}</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+{% if user %}
+<header class="top"><div class="bar">
+  <a class="brand" href="/">Button Notifier</a>
+  <nav>
+    {% for href, label in [("/", "Overview"), ("/activity", "Activity"), ("/people", "People"), ("/locations", "Locations"), ("/buttons", "Buttons"), ("/updates", "Updates")] %}
+    <a href="{{ href }}" class="{{ 'on' if (path == href or (href != '/' and path.startswith(href))) }}">{{ label }}</a>
+    {% endfor %}
+    {% if user.role == "admin" %}<a href="/users" class="{{ 'on' if path.startswith('/users') }}">Users</a>{% endif %}
+    <a href="/account" class="{{ 'on' if path.startswith('/account') }}">Account</a>
+  </nav>
+  <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="link">Sign out</button></form>
+</div></header>
+{% endif %}
+<main>
+{% if flash %}<div class="flash">{{ flash }}</div>{% endif %}
+{% block body %}{% endblock %}
+</main>
+</body>
+</html>

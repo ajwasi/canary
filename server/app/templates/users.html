@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block body %}
+<h1>Users</h1>
+<div class="card">
+  <div class="tablewrap"><table>
+    <thead><tr><th>User</th><th>Two-step</th><th>Role</th><th>Access</th><th></th></tr></thead>
+    <tbody>
+    {% for u in users %}
+    <tr>
+      <td>{{ u.email }}{% if u.id == user.id %}<span class="tag">you</span>{% endif %}<br><span class="sub">{{ u.name }}</span></td>
+      <td>{{ "On" if u.totp_enabled else "Off" }}</td>
+      <td colspan="3">
+        <form method="post" action="/users/{{ u.id }}" class="inline">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <div><select name="role" aria-label="Role">{% for r in roles %}<option value="{{ r }}" {{ 'selected' if r == u.role }}>{{ r | capitalize }}</option>{% endfor %}</select></div>
+          <label class="check"><input type="checkbox" name="active" value="1" {{ 'checked' if u.active }}> Can sign in</label>
+          <label class="check"><input type="checkbox" name="reset" value="1"> Reset password</label>
+          <button class="plain">Save</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  <p class="sub">Viewers can see everything. Managers can also edit people, locations and buttons and send updates. Administrators can also manage users. Resetting a password also turns off that user's two-step sign-in.</p>
+</div>
+<div class="card">
+  <h2>Add a user</h2>
+  <form method="post" action="/users" class="inline">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <div><label for="email">Email</label><input type="email" id="email" name="email" required></div>
+    <div><label for="name">Name</label><input type="text" id="name" name="name" maxlength="100"></div>
+    <div><label for="role">Role</label><select name="role" id="role">{% for r in roles %}<option value="{{ r }}">{{ r | capitalize }}</option>{% endfor %}</select></div>
+    <button>Add user</button>
+  </form>
+</div>
+<div class="card">
+  <h2>Recent changes</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Time</th><th>Who</th><th>What</th></tr></thead>
+    <tbody>
+    {% for a in log %}<tr><td class="time">{{ a.at | localtime }}</td><td>{{ a.actor }}</td><td>{{ a.action }}</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

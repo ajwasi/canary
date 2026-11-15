@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Account{% endblock %}
+{% block body %}
+<h1>Account</h1>
+{% if user.must_change %}<div class="flash">Choose a new password before you continue.</div>{% endif %}
+<div class="two">
+  <div class="card">
+    <h2>Password</h2>
+    <div class="sub">{{ user.email }} · {{ user.role | capitalize }}</div>
+    <form method="post" action="/account/password">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label for="current">Current password</label><input type="password" id="current" name="current" required autocomplete="current-password">
+      <label for="new">New password (at least {{ min_password }} characters)</label><input type="password" id="new" name="new" minlength="{{ min_password }}" required autocomplete="new-password">
+      <button>Change password</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Two-step sign-in</h2>
+    {% if user.totp_enabled %}
+    <p>On. You need a code from your authenticator app each time you sign in.</p>
+    <form method="post" action="/account/totp/disable">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label for="password">Password</label><input type="password" id="password" name="password" required>
+      <button class="danger">Turn off</button>
+    </form>
+    {% elif qr %}
+    <p>Scan this with an authenticator app, then enter the 6-digit code it shows.</p>
+    <div class="qr">{{ qr | safe }}</div>
+    <p class="sub">Or enter this address by hand: {{ uri }}</p>
+    <form method="post" action="/account/totp/enable">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label for="code">Code</label><input type="text" id="code" name="code" inputmode="numeric" required>
+      <button>Turn on</button>
+    </form>
+    {% else %}
+    <p>Off. Turning it on adds a code from an authenticator app to your sign-in.</p>
+    <form method="post" action="/account/totp/start"><input type="hidden" name="csrf" value="{{ csrf }}"><button>Set up</button></form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
