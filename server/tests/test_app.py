@@ -3,6 +3,7 @@ to the handler, and commands the server would publish are captured in mqtt.outbo
 import io
 import json
 import os
+import html
 import re
 import tempfile
 import wave
@@ -49,8 +50,11 @@ class Browser:
 
     def post(self, url, data=None, files=None):
         r = self.c.post(url, data={**(data or {}), "csrf": self.csrf}, files=files, follow_redirects=False)
-        r.flash = unquote(r.cookies.get("flash", "")) if "flash" in r.cookies else ""
-        self.c.cookies.delete("flash")
+        r.flash = ""
+        if r.status_code == 303:                            # the message is shown once, on the next page
+            page = self.c.get(r.headers["location"]).text
+            found = re.search(r'<div class="flash">(.*?)</div>', page, re.S)
+            r.flash = html.unescape(found.group(1)) if found else ""
         return r
 
     def get(self, url):
@@ -282,3 +286,14 @@ def test_activity_page_has_chart(client):
     assert "delay_seconds" in me.get("/activity.csv").text
     assert "Presses per month" in me.get("/activity?group=month").text
     assert "No presses to chart" in me.get("/activity?button=2").text
+
+
+def test_redirects_stay_on_this_site_and_messages_stay_off_the_cookie(client):
+    from app.main import go
+    assert go("/buttons/1").headers["location"] == "/buttons/1"
+    for bad in ("https://evil.example/", "//evil.example", "/\evil.example", "javascript:alert(1)", "evil", "/a\r\nb"):
+        assert go(bad).headers["location"] == "/"
+    admin = Browser(client, "admin@test.local", "correct horse battery")
+    r = admin.post("/people", {"name": "Cookie Check"})
+    assert r.status_code == 303 and "flash" in r.cookies and "Cookie Check" not in r.cookies["flash"]
+    assert "Cookie Check" in r.flash

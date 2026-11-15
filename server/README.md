@@ -35,7 +35,13 @@ set MQTT_ENABLED=0
 .venv\Scripts\python -m uvicorn app.main:app --port 8000
 ```
 
-Open http://localhost:8000. The first start prints a temporary administrator password (for `admin@example.com`) in the console.
+Create the first administrator, which prompts for a password:
+
+```
+.venv\Scripts\python -m app.create_admin
+```
+
+Then open http://localhost:8000 and sign in. (Setting `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the environment before the first start creates the account for you instead.)
 
 With `MQTT_ENABLED=0` there is no broker, so no presses arrive; you can explore the UI and test enrolment:
 
@@ -49,8 +55,8 @@ You need a Linux host with Docker, a DNS name pointing at it, and ports 80, 443 
 
 1. Copy `.env.example` to `.env` and fill in every value.
 2. Run `docker compose up -d --build`.
-3. Run `docker compose logs app` and note the temporary administrator password.
-4. Sign in at `https://<your domain>`, change the password, and turn on two-step sign-in under Account.
+3. Run `docker compose exec app python -m app.create_admin` and enter a password for the first administrator.
+4. Sign in at `https://<your domain>` and turn on two-step sign-in under Account.
 5. Set the same domain as the default server host in the firmware (`idf.py menuconfig`).
 
 To test the whole path before hardware arrives, run the simulator from any computer:

@@ -11,6 +11,7 @@ HTTP, TLS and MQTT on localhost. The button is one of two things:
       CANARY_TEST_CA=../firmware/host/test-ca python -m pytest test_e2e.py -q
 """
 import asyncio
+import html
 import io
 import os
 import re
@@ -25,7 +26,6 @@ import time
 import wave
 from pathlib import Path
 from types import SimpleNamespace
-from urllib.parse import unquote
 
 import httpx
 import pytest
@@ -60,9 +60,9 @@ class Admin:
     def post(self, url, data=None, files=None):
         r = self.c.post(url, data={**(data or {}), "csrf": self.csrf}, files=files)
         assert r.status_code == 303, r.text
-        flash = unquote(r.cookies.get("flash", ""))
-        self.c.cookies.delete("flash")
-        return flash
+        page = self.c.get(r.headers["location"]).text          # the message is shown once, on the next page
+        found = re.search(r'<div class="flash">(.*?)</div>', page, re.S)
+        return html.unescape(found.group(1)) if found else ""
 
     def page(self, url):
         return self.c.get(url).text
@@ -280,6 +280,7 @@ def test_everything(rig):
 
     # ---- the broker refuses a client without a certificate ----
     ctx = ssl.create_default_context(cafile=rig.broker_ca)
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_2
     with pytest.raises((ssl.SSLError, ConnectionError, AssertionError)):
         with socket.create_connection(("localhost", TLS), timeout=5) as raw, ctx.wrap_socket(raw, server_hostname="localhost") as s:
             s.sendall(b"\x10\x10\x00\x04MQTT\x04\x02\x00\x1e\x00\x04evil")

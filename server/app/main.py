@@ -4,12 +4,13 @@ import hashlib
 import io
 import logging
 import secrets
+import threading
 import time
 import wave
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import quote, unquote, urlencode
+from urllib.parse import urlencode, urlsplit
 from zoneinfo import ZoneInfo, available_timezones
 
 import pyotp
@@ -49,13 +50,14 @@ def bootstrap() -> None:
         (FILES / sub).mkdir(parents=True, exist_ok=True)
     with SessionLocal() as db:
         if db.query(User).count() == 0:
-            password = settings.admin_password or security.temp_password()
-            db.add(User(email=settings.admin_email.lower(), name="Administrator", role="admin",
-                        password_hash=security.hash_password(password), must_change=not settings.admin_password))
-            db.commit()
-            if not settings.admin_password:
-                print(f"\n*** First administrator created: {settings.admin_email} / {password}\n"
-                      "*** You must change this password at first sign-in.\n", flush=True)
+            if settings.admin_password:
+                db.add(User(email=settings.admin_email.lower(), name="Administrator", role="admin",
+                            password_hash=security.hash_password(settings.admin_password), must_change=False))
+                db.commit()
+            else:
+                print("\n*** There are no users yet. Create the first administrator with:\n"
+                      "***     python -m app.create_admin\n"
+                      "*** (in Docker: docker compose exec app python -m app.create_admin)\n", flush=True)
 
 
 @asynccontextmanager
@@ -102,20 +104,48 @@ def press_time(p: Press) -> str:
 templates.env.filters.update(localtime=localtime, ago=ago, press_time=press_time, delay=chart.fmt_delay)
 
 
+# One-time messages ("Button added. Claim code: ...") wait here for the next page. The browser
+# holds only a random id, so a claim code or temporary password is never stored in a cookie.
+# Like the rest of the app this assumes a single server process.
+FLASH_SECONDS = 60
+_flash: dict[str, tuple[float, str]] = {}
+_flash_lock = threading.Lock()
+
+
+def _take_flash(token: str | None) -> str | None:
+    now = time.monotonic()
+    with _flash_lock:
+        for key in [k for k, (expires, _) in _flash.items() if expires < now]:
+            del _flash[key]
+        entry = _flash.pop(token, None) if token else None
+    return entry[1] if entry else None
+
+
 def render(request: Request, name: str, **ctx):
-    flash = request.cookies.get("flash")
+    token = request.cookies.get("flash")
     ctx.update(user=getattr(request.state, "user", None), csrf=getattr(request.state, "csrf", ""),
-               flash=unquote(flash) if flash else None, path=request.url.path)
+               flash=_take_flash(token), path=request.url.path)
     resp = templates.TemplateResponse(request, name, ctx)
-    if flash:
+    if token:
         resp.delete_cookie("flash")
     return resp
 
 
 def go(url: str, msg: str | None = None):
-    resp = RedirectResponse(url, 303)
+    """Redirects to a page on this site, optionally leaving a one-time message for it.
+    Anything that is not a plain path on this site goes to the home page instead."""
+    parts = urlsplit(url)
+    if (parts.netloc == "" and parts.scheme == "" and url.startswith("/") and not url.startswith("//")
+            and "\\" not in url and url.isprintable()):
+        resp = RedirectResponse(url, 303)
+    else:
+        resp = RedirectResponse("/", 303)
     if msg:
-        resp.set_cookie("flash", quote(msg), max_age=60, httponly=True, samesite="lax", secure=settings.cookie_secure)
+        token = secrets.token_urlsafe(16)
+        with _flash_lock:
+            _flash[token] = (time.monotonic() + FLASH_SECONDS, msg)
+        resp.set_cookie("flash", token, max_age=FLASH_SECONDS, httponly=True, samesite="lax",
+                        secure=settings.cookie_secure)
     return resp
 
 
@@ -639,8 +669,8 @@ def enroll(body: EnrollRequest, request: Request, db: Db = Depends(get_db)):
 # Keep these last: "/{kind}" would otherwise shadow the fixed paths above.
 
 KINDS = {
-    "people": dict(model=Person, title="People", one="person", press_col=Press.person_id, filter_key="person"),
-    "locations": dict(model=Location, title="Locations", one="location", press_col=Press.location_id,
+    "people": dict(path="/people", model=Person, title="People", one="person", press_col=Press.person_id, filter_key="person"),
+    "locations": dict(path="/locations", model=Location, title="Locations", one="location", press_col=Press.location_id,
                       filter_key="location"),
 }
 
@@ -679,7 +709,7 @@ def owner_create(kind: str, name: str = Form(""), notes: str = Form(""), address
     db.add(item)
     audit(db, user.email, f"added {k['one']} {item.name}")
     db.commit()
-    return go(f"/{kind}/{item.id}", f"Added {item.name}.")
+    return go(f"{k['path']}/{item.id}", f"Added {item.name}.")
 
 
 @app.get("/{kind}/{item_id}")
@@ -700,4 +730,4 @@ def owner_update(kind: str, item_id: int, name: str = Form(""), notes: str = For
     item.archived = archived == "1"
     audit(db, user.email, f"edited {k['one']} {item.name}")
     db.commit()
-    return go(f"/{kind}/{item_id}", "Saved.")
+    return go(f"{k['path']}/{item.id}", "Saved.")
