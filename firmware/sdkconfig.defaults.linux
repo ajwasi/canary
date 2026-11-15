@@ -18,3 +18,6 @@ CONFIG_BTN_WIFI_RETRY_MAX_S=1
 # Create it first: python ../emulator/test_ca.py host/test-ca
 CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE=y
 CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH="host/test-ca/root.pem"
+
+# ESP-IDF's flash emulation only finds the partition table below 64 KB.
+CONFIG_PARTITION_TABLE_OFFSET=0x8000
