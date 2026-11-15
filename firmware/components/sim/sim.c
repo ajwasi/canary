@@ -299,6 +299,7 @@ static char *state_json(void)
     cJSON_AddStringToObject(j, "fw", sim_ota_running());
     cJSON_AddBoolToObject(j, "fw_pending", sim_ota_pending());
     cJSON_AddNumberToObject(j, "uptime_ms", (double)sim_uptime_ms());
+    cJSON_AddNumberToObject(j, "ticks", (double)xTaskGetTickCount());
     sim_wifi_state(j);
 
     nvs_handle_t h;

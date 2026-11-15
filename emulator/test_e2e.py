@@ -125,6 +125,7 @@ def rig(tmp_path_factory):
                                   links=((HTTPS_LINK, HTTPS), (TLS_LINK, TLS)))
             yield SimpleNamespace(button=button, admin=Admin(f"https://127.0.0.1:{HTTPS}", root), firmware=True,
                                   host="127.0.0.1", broker_ca=str(ca / "root.pem"))
+            button.log(f"state at the end of the test: {button._state()}")
             button.power_off()
         finally:
             server.terminate()
