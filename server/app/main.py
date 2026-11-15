@@ -730,4 +730,4 @@ def owner_update(kind: str, item_id: int, name: str = Form(""), notes: str = For
     item.archived = archived == "1"
     audit(db, user.email, f"edited {k['one']} {item.name}")
     db.commit()
-    return go(f"{k['path']}/{item_id}", "Saved.")
+    return go(f"{k['path']}/{item.id}", "Saved.")
