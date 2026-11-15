@@ -1,6 +1,6 @@
 # Datasheets
 
-**These files are the property of the companies that make the products.** They are copied here unmodified, for reference only, so the design in [../hardware.md](../hardware.md) can be checked against them. They are not covered by any licence that applies to the rest of this repository. All product names and trademarks belong to their owners.
+**These files are the property of the companies that make the products.** They are copied here unmodified, for reference only, so the design in [../hardware.md](../hardware.md) can be checked against them. They are not covered by the MIT licence that applies to the rest of this repository. All product names and trademarks belong to their owners.
 
 For the current version of any datasheet, use the manufacturer's own site. If you own one of these files and want it removed, open an issue.
 

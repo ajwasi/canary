@@ -116,4 +116,8 @@ The server needs one small Linux machine with Docker (1 CPU and 1 GB of memory i
 
 ## Datasheets
 
-The files in [docs/datasheets/](docs/datasheets/) are the property of the companies that make those products (Omron, Espressif, Seeed Studio, Analog Devices and Sharp). They are included unmodified, for reference only, and are not covered by any licence that applies to the rest of this repository. See [docs/datasheets/README.md](docs/datasheets/README.md) for each file's owner and source.
+The files in [docs/datasheets/](docs/datasheets/) are the property of the companies that make those products (Omron, Espressif, Seeed Studio, Analog Devices and Sharp). They are included unmodified, for reference only, and are not covered by the MIT licence that applies to the rest of this repository. See [docs/datasheets/README.md](docs/datasheets/README.md) for each file's owner and source.
+
+## Licence
+
+The code, documentation and diagrams in this repository are released under the [MIT licence](LICENSE). The datasheets in `docs/datasheets/` are excluded; they remain the property of their manufacturers.
