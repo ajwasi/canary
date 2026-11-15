@@ -289,10 +289,10 @@ def test_activity_page_has_chart(client):
 
 
 def test_redirects_stay_on_this_site_and_messages_stay_off_the_cookie(client):
-    from app.main import local_path
-    assert local_path("/buttons/1") == "/buttons/1"
+    from app.main import go
+    assert go("/buttons/1").headers["location"] == "/buttons/1"
     for bad in ("https://evil.example/", "//evil.example", "/\evil.example", "javascript:alert(1)", "evil", "/a\r\nb"):
-        assert local_path(bad) == "/"
+        assert go(bad).headers["location"] == "/"
     admin = Browser(client, "admin@test.local", "correct horse battery")
     r = admin.post("/people", {"name": "Cookie Check"})
     assert r.status_code == 303 and "flash" in r.cookies and "Cookie Check" not in r.cookies["flash"]

@@ -131,17 +131,15 @@ def render(request: Request, name: str, **ctx):
     return resp
 
 
-def local_path(url: str) -> str:
-    """Only paths on this site are ever redirected to; anything else becomes the home page."""
-    parts = urlsplit(url)
-    if parts.scheme or parts.netloc or not url.startswith("/") or url.startswith("//") or "\\" in url \
-            or any(ord(c) < 32 for c in url):
-        return "/"
-    return url
-
-
 def go(url: str, msg: str | None = None):
-    resp = RedirectResponse(local_path(url), 303)
+    """Redirects to a page on this site, optionally leaving a one-time message for it.
+    Anything that is not a plain path on this site goes to the home page instead."""
+    parts = urlsplit(url)
+    if (parts.netloc == "" and parts.scheme == "" and url.startswith("/") and not url.startswith("//")
+            and "\\" not in url and url.isprintable()):
+        resp = RedirectResponse(url, 303)
+    else:
+        resp = RedirectResponse("/", 303)
     if msg:
         token = secrets.token_urlsafe(16)
         with _flash_lock:
