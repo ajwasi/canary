@@ -13,9 +13,10 @@ This is a design and software project. No hardware has been built yet.
 | Part | Where | State |
 |---|---|---|
 | Hardware design, wiring, assembly steps | [docs/hardware.md](docs/hardware.md) | Designed, not yet built |
-| Button firmware (ESP-IDF, ESP32-C5) | [firmware/](firmware/) | Written, not yet compiled or run |
+| Button firmware (ESP-IDF, ESP32-C5) | [firmware/](firmware/) | Builds for the ESP32-C5; passes the end-to-end test as a Linux program; not yet run on hardware |
 | Server and web interface | [server/](server/) | Tests pass and it runs locally; the Docker deployment has not been run |
 | Button emulator and local test rig | [emulator/](emulator/) | End-to-end test passes against the real server |
+| Automated checks | [.github/workflows/ci.yml](.github/workflows/ci.yml) | Server tests, firmware build, and the end-to-end test with both the emulator and the real firmware, on every push |
 | Device–server protocol | [docs/protocol.md](docs/protocol.md) | Defined; implemented by the server and the emulator |
 | Screen mocks | [docs/mocks/](docs/mocks/) | Generated from the real pages with sample data |
 
@@ -99,7 +100,7 @@ Parts cost roughly $60–75 per unit in single quantities. The full parts list, 
 | [docs/](docs/) | Hardware design, wiring diagrams, protocol, datasheets, screen mocks |
 | [firmware/](firmware/) | ESP-IDF project for the button |
 | [server/](server/) | FastAPI web application, device certificate authority, MQTT handling, Docker deployment files |
-| [emulator/](emulator/) | Software button, local test broker, one-command test rig, end-to-end test |
+| [emulator/](emulator/) | Software button, local test broker, one-command test rig, end-to-end test, harness for testing the real firmware |
 
 Each folder has its own README with build, run and test instructions.
 
@@ -109,8 +110,8 @@ The server needs one small Linux machine with Docker (1 CPU and 1 GB of memory i
 
 ## Known gaps
 
-- The firmware has not been compiled; expect build errors on the first attempt.
-- The emulator re-implements the firmware's behaviour in Python. It tests the server and the protocol, not the C code.
+- The firmware has not run on a real board. The automated test runs its C code on Linux with the radio, pins, amplifier and firmware slots simulated, so those parts and the wiring are still unproven.
+- The emulator re-implements the firmware's behaviour in Python. It tests the server and the protocol; the firmware's own test covers the C code.
 - Revoking a button stops its presses being recorded at once, but the broker accepts its connection until its certificate expires (30 days at most).
 - The database is not encrypted by the application; put it on an encrypted disk.
 

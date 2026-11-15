@@ -2,7 +2,9 @@
 
 A software stand-in for one button unit, for testing the server before any hardware exists. It follows the hardware in [../docs/hardware.md](../docs/hardware.md), the firmware behaviour in [../firmware/main/](../firmware/main/) and the protocol in [../docs/protocol.md](../docs/protocol.md).
 
-It is a re-implementation of the firmware's behaviour in Python, not the firmware itself. It tests the server and the protocol; it cannot find bugs in the C code.
+It is a re-implementation of the firmware's behaviour in Python, not the firmware itself. It tests the server and the protocol, runs on any operating system, and has a control panel you can click.
+
+To test the C code itself, the same end-to-end test can drive the real firmware built as a Linux program; see [Testing the real firmware](#testing-the-real-firmware).
 
 ## What is emulated
 
@@ -64,6 +66,24 @@ Without `--dev` the emulator behaves like a real unit: HTTPS for enrolment, TLS 
 
 It starts the real server, the test broker and an emulated button on spare ports and checks, over real HTTP, TLS and MQTT: setup and enrolment, presses, an outage with queued presses, a power cut, sound and firmware updates, rollback, certificate renewal, commands, the wiring fault, revocation and a wrong Wi-Fi password. It takes about 80 seconds.
 
+## Testing the real firmware
+
+`test_e2e.py` can run the same steps against the firmware's C code, built as a Linux program (see "PC test build" in [../firmware/README.md](../firmware/README.md) for the build commands):
+
+```
+CANARY_TARGET=firmware CANARY_FIRMWARE_ELF=../firmware/build-host/button_notifier.elf \
+CANARY_TEST_CA=../firmware/host/test-ca python -m pytest test_e2e.py -q
+```
+
+In this mode the server runs with HTTPS and the firmware reaches it exactly as a real unit would: enrolment over HTTPS, MQTT over TLS with its client certificate, both checked against its certificate bundle. `host_firmware.py` plays the bench:
+
+- **Power:** it starts the program, starts it again when the firmware asks to restart, and kills it without warning for a power cut.
+- **Switch, NC wire, clock:** commands on a local control socket that the simulated hardware listens on.
+- **Site Wi-Fi:** the simulated radio loses its access point, and the unit's TCP connections are cut at the same moment.
+- **Observation:** the unit's log, and a state report (settings, queue, sounds played, LED pattern, firmware version) from the control socket.
+
+GitHub Actions runs both modes on every push. This mode needs Linux, macOS or WSL.
+
 ## Files
 
 | File | Purpose |
@@ -72,4 +92,6 @@ It starts the real server, the test broker and an emulated button on spare ports
 | `panel.html` | The control panel page |
 | `dev_broker.py` | Small MQTT broker for local testing, with the same access rules as the production Mosquitto configuration. Not for production |
 | `run_rig.py` | Starts server, broker and buttons together |
-| `test_e2e.py` | The end-to-end test |
+| `test_e2e.py` | The end-to-end test, for the emulator or the real firmware |
+| `host_firmware.py` | Runs the firmware's Linux build as a button for the test |
+| `test_ca.py` | Makes the throw-away root certificate the firmware's Linux build trusts |

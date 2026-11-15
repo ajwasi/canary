@@ -9,7 +9,9 @@
 #define POLL_MS 5
 #define NC_FAULT_MS 1000
 
+#if CONFIG_BTN_MONITOR_NC
 static const char *TAG = "button";
+#endif
 static button_cb_t s_cb;
 static volatile bool s_pressed;
 static volatile bool s_nc_fault;

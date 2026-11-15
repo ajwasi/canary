@@ -4,7 +4,6 @@
  * A signal that arrives while a task waits in read() or write() makes the call fail with
  * EINTR, which the TLS layer reports as a broken connection. On the chip this cannot
  * happen. These wrappers repeat the call instead, as ESP-IDF itself does for select(). */
-#define _GNU_SOURCE
 #include <dlfcn.h>
 #include <errno.h>
 #include <unistd.h>
