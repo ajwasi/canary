@@ -11,16 +11,16 @@
 #include "freertos/task.h"
 #include "esp_netif_sntp.h"
 #include "esp_ota_ops.h"
-#include "esp_app_desc.h"
 #include "esp_timer.h"
 #include "esp_system.h"
 #include "esp_log.h"
+#include "sdkconfig.h"
 #include "board.h"
 #include "app.h"
 
-#define SETUP_HOLD_MS 10000
-#define ROLLBACK_AFTER_MS (10 * 60 * 1000)
-#define STATUS_EVERY_S 300
+#define SETUP_HOLD_MS CONFIG_BTN_SETUP_HOLD_MS
+#define ROLLBACK_AFTER_MS (CONFIG_BTN_ROLLBACK_AFTER_S * 1000LL)
+#define STATUS_EVERY_S CONFIG_BTN_STATUS_EVERY_S
 #define CSR_RETRY_S (6 * 3600)
 
 static const char *TAG = "app";
@@ -95,7 +95,7 @@ static void enter_setup(void)
 void app_main(void)
 {
     ESP_ERROR_CHECK(cfg_init());
-    ESP_LOGI(TAG, "%s firmware %s, boot %lu", identity_serial(), esp_app_get_description()->version,
+    ESP_LOGI(TAG, "%s firmware %s, boot %lu", identity_serial(), fw_version(),
              (unsigned long)g_boot_id);
     xTaskCreate(led_task, "led", 2048, NULL, 2, NULL);
     evq_init();
@@ -140,16 +140,16 @@ void app_main(void)
             esp_restart();
         }
         rollback_if_stuck();
-        vTaskDelay(pdMS_TO_TICKS(30000));
+        vTaskDelay(pdMS_TO_TICKS(CONFIG_BTN_ENROLL_RETRY_S * 1000));
     }
 
     /* ---- server link ---- */
     mqtt_link_start();
     int since_status = 0, since_csr = CSR_RETRY_S;
     for (;;) {
-        vTaskDelay(pdMS_TO_TICKS(10000));
-        since_status += 10;
-        since_csr += 10;
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        since_status++;
+        since_csr++;
         bool online = mqtt_link_connected();
         s_led = online ? LED_ONLINE : (wifi_mgr_connected() ? LED_FAULT : LED_CONNECTING);
         rollback_if_stuck();

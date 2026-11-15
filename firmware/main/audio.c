@@ -17,8 +17,6 @@
 #include "board.h"
 #include "app.h"
 
-#define WAV_PATH     "/spiffs/press.wav"
-#define WAV_TMP_PATH "/spiffs/press.new"
 #define WAV_MAX_BYTES (1500 * 1024)
 #define BEEP_RATE 16000
 
@@ -26,6 +24,7 @@ static const char *TAG = "audio";
 static i2s_chan_handle_t s_tx;
 static TaskHandle_t s_task;
 static SemaphoreHandle_t s_file_lock;
+static char s_wav[128], s_wav_tmp[128];          /* installed sound, and a download in progress */
 
 typedef struct {
     uint32_t rate;
@@ -111,7 +110,7 @@ static bool play_file(void)
 {
     static int16_t buf[512];
     wav_info_t w;
-    FILE *f = fopen(WAV_PATH, "rb");
+    FILE *f = fopen(s_wav, "rb");
     if (!f) return false;
     if (!wav_open(f, &w)) {
         fclose(f);
@@ -153,10 +152,12 @@ void audio_init(void)
     gpio_set_level(PIN_AMP_SD, 0);
 
     esp_vfs_spiffs_conf_t fs = {
-        .base_path = "/spiffs", .partition_label = "storage",
+        .base_path = storage_dir(), .partition_label = "storage",
         .max_files = 3, .format_if_mount_failed = true,
     };
     if (esp_vfs_spiffs_register(&fs) != ESP_OK) ESP_LOGW(TAG, "no audio storage; using built-in beep");
+    snprintf(s_wav, sizeof(s_wav), "%s/press.wav", storage_dir());
+    snprintf(s_wav_tmp, sizeof(s_wav_tmp), "%s/press.new", storage_dir());
 
     i2s_chan_config_t cc = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
     cc.auto_clear = true;
@@ -198,7 +199,7 @@ esp_err_t audio_update(const char *url, const char *sha256_hex)
     if (esp_http_client_open(http, 0) != ESP_OK) goto done;
     esp_http_client_fetch_headers(http);
     if (esp_http_client_get_status_code(http) != 200) goto done;
-    if (!(f = fopen(WAV_TMP_PATH, "wb"))) goto done;
+    if (!(f = fopen(s_wav_tmp, "wb"))) goto done;
 
     static uint8_t buf[1024];
     int total = 0, n;
@@ -221,7 +222,7 @@ esp_err_t audio_update(const char *url, const char *sha256_hex)
     }
 
     wav_info_t w;
-    FILE *chk = fopen(WAV_TMP_PATH, "rb");
+    FILE *chk = fopen(s_wav_tmp, "rb");
     bool valid = chk && wav_open(chk, &w);
     if (chk) fclose(chk);
     if (!valid) {
@@ -230,8 +231,8 @@ esp_err_t audio_update(const char *url, const char *sha256_hex)
     }
 
     xSemaphoreTake(s_file_lock, portMAX_DELAY);
-    unlink(WAV_PATH);
-    bool renamed = rename(WAV_TMP_PATH, WAV_PATH) == 0;
+    unlink(s_wav);
+    bool renamed = rename(s_wav_tmp, s_wav) == 0;
     xSemaphoreGive(s_file_lock);
     if (renamed) {
         cfg_set_str("audio_sha", hex);
@@ -241,7 +242,7 @@ esp_err_t audio_update(const char *url, const char *sha256_hex)
 
 done:
     if (f) fclose(f);
-    if (err != ESP_OK) unlink(WAV_TMP_PATH);
+    if (err != ESP_OK) unlink(s_wav_tmp);
     mbedtls_sha256_free(&sha);
     esp_http_client_close(http);
     esp_http_client_cleanup(http);

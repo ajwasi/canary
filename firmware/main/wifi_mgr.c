@@ -118,7 +118,8 @@ static void wifi_task(void *arg)
             s_fail++;
             ESP_LOGW(TAG, "no WPA2/WPA3 access point found for the configured network");
         }
-        int wait_s = s_fail == 0 ? 1 : (s_fail > 4 ? 30 : 2 << s_fail);
+        int wait_s = s_fail == 0 ? 1 : (s_fail > 4 ? 32 : 2 << s_fail);                /* 4, 8, 16, 32 s */
+        if (wait_s > CONFIG_BTN_WIFI_RETRY_MAX_S) wait_s = CONFIG_BTN_WIFI_RETRY_MAX_S;
         vTaskDelay(pdMS_TO_TICKS(wait_s * 1000));
     }
 }

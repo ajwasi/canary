@@ -1,0 +1,20 @@
+# PC test build: the firmware runs as a Linux program against a local test server.
+# See ../emulator/README.md. Never used for real units.
+
+# Local test server instead of ports 443/8883/80 (which need root on a PC).
+CONFIG_BTN_HTTPS_PORT=18444
+CONFIG_BTN_MQTT_PORT=18832
+CONFIG_BTN_SETUP_HTTP_PORT=18091
+CONFIG_BTN_MONITOR_NC=y
+
+# Short timings so the test finishes in about a minute.
+CONFIG_BTN_SETUP_HOLD_MS=1000
+CONFIG_BTN_STATUS_EVERY_S=2
+CONFIG_BTN_ROLLBACK_AFTER_S=6
+CONFIG_BTN_ENROLL_RETRY_S=1
+CONFIG_BTN_WIFI_RETRY_MAX_S=1
+
+# Trust the test rig's root certificate as well as the public roots.
+# Create it first: python ../emulator/test_ca.py host/test-ca
+CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE=y
+CONFIG_MBEDTLS_CUSTOM_CERTIFICATE_BUNDLE_PATH="host/test-ca/root.pem"

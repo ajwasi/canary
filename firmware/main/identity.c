@@ -14,6 +14,7 @@
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_csr.h"
 #include "cJSON.h"
+#include "sdkconfig.h"
 #include "app.h"
 
 static const char *TAG = "identity";
@@ -149,7 +150,7 @@ bool identity_renew_due(void)
 {
     time_t from, to;
     if (!time_is_valid() || !cert_times(&from, &to)) return false;
-    return time(NULL) > from + (to - from) / 3 * 2;
+    return now_ms() / 1000 > from + (to - from) / 3 * 2;
 }
 
 int identity_enroll(void)
@@ -175,7 +176,7 @@ int identity_enroll(void)
     cJSON_Delete(j);
     if (!body) goto done;
 
-    snprintf(url, sizeof(url), "https://%s/api/device/enroll", host);
+    snprintf(url, sizeof(url), "https://%s:%d/api/device/enroll", host, CONFIG_BTN_HTTPS_PORT);
     esp_http_client_config_t hc = {
         .url = url, .method = HTTP_METHOD_POST,
         .crt_bundle_attach = esp_crt_bundle_attach, .timeout_ms = 15000,

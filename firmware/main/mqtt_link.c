@@ -13,7 +13,6 @@
 #include "esp_crt_bundle.h"
 #include "esp_https_ota.h"
 #include "esp_ota_ops.h"
-#include "esp_app_desc.h"
 #include "esp_wifi.h"
 #include "esp_netif.h"
 #include "esp_timer.h"
@@ -64,7 +63,7 @@ void mqtt_link_publish_status(void)
     cJSON_AddBoolToObject(j, "online", true);
     cJSON_AddStringToObject(j, "serial", identity_serial());
     cJSON_AddStringToObject(j, "name", name ? name : "");
-    cJSON_AddStringToObject(j, "fw", esp_app_get_description()->version);
+    cJSON_AddStringToObject(j, "fw", fw_version());
     cJSON_AddNumberToObject(j, "rssi", ap.rssi);
     cJSON_AddNumberToObject(j, "channel", ap.primary);
     cJSON_AddStringToObject(j, "ip", ipstr);
@@ -165,7 +164,7 @@ static void handle_cmd(const char *data, int len)
     const char *url = str_field(j, "url");
     if (!strcmp(type, "ota")) {
         const char *ver = str_field(j, "version");
-        if (url && ver && strcmp(ver, esp_app_get_description()->version) != 0) queue_job(JOB_OTA, url, ver);
+        if (url && ver && strcmp(ver, fw_version()) != 0) queue_job(JOB_OTA, url, ver);
     } else if (!strcmp(type, "audio")) {
         const char *sha = str_field(j, "sha256");
         char *have = cfg_get_str("audio_sha");

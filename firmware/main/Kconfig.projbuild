@@ -4,11 +4,19 @@ menu "Button notifier"
         string "Default server host name"
         default "buttons.example.com"
         help
-            Pre-filled in the setup page. Serves HTTPS on 443 and MQTT/TLS on BTN_MQTT_PORT.
+            Pre-filled in the setup page. Serves HTTPS on BTN_HTTPS_PORT and MQTT/TLS on BTN_MQTT_PORT.
+
+    config BTN_HTTPS_PORT
+        int "HTTPS port used for enrolment"
+        default 443
 
     config BTN_MQTT_PORT
         int "MQTT over TLS port"
         default 8883
+
+    config BTN_SETUP_HTTP_PORT
+        int "Port of the setup page in setup mode"
+        default 80
 
     config BTN_MONITOR_NC
         bool "Monitor the NC contact for wire breaks"
@@ -19,5 +27,29 @@ menu "Button notifier"
     config BTN_DEBOUNCE_MS
         int "Debounce time in ms"
         default 30
+
+    menu "Timing"
+        comment "The PC test build (sdkconfig.defaults.linux) shortens these. Leave them alone for real units."
+
+        config BTN_SETUP_HOLD_MS
+            int "Hold the button this long from power-up to enter setup mode (ms)"
+            default 10000
+
+        config BTN_STATUS_EVERY_S
+            int "Seconds between status reports"
+            default 300
+
+        config BTN_ROLLBACK_AFTER_S
+            int "Roll back new firmware that has not reached the server after this many seconds"
+            default 600
+
+        config BTN_ENROLL_RETRY_S
+            int "Seconds between enrolment attempts"
+            default 30
+
+        config BTN_WIFI_RETRY_MAX_S
+            int "Longest wait between Wi-Fi join attempts (s)"
+            default 30
+    endmenu
 
 endmenu

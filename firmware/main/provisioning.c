@@ -8,11 +8,11 @@
 #include "freertos/task.h"
 #include "esp_wifi.h"
 #include "esp_http_server.h"
-#include "esp_app_desc.h"
 #include "esp_random.h"
 #include "esp_system.h"
 #include "esp_log.h"
-#include "lwip/sockets.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include "cJSON.h"
 #include "sdkconfig.h"
 #include "app.h"
@@ -60,7 +60,7 @@ static esp_err_t h_info(httpd_req_t *req)
     char *name = cfg_get_str("name"), *host = cfg_get_str("host");
     cJSON *j = cJSON_CreateObject();
     cJSON_AddStringToObject(j, "serial", identity_serial());
-    cJSON_AddStringToObject(j, "fw", esp_app_get_description()->version);
+    cJSON_AddStringToObject(j, "fw", fw_version());
     cJSON_AddStringToObject(j, "name", name ? name : "");
     cJSON_AddStringToObject(j, "host", host ? host : CONFIG_BTN_DEFAULT_SERVER_HOST);
     cJSON_AddBoolToObject(j, "enrolled", identity_has_cert());
@@ -216,6 +216,7 @@ void provisioning_run(void)
 
     httpd_config_t hc = HTTPD_DEFAULT_CONFIG();
     hc.stack_size = 8192;
+    hc.server_port = CONFIG_BTN_SETUP_HTTP_PORT;
     hc.lru_purge_enable = true;
     httpd_handle_t srv = NULL;
     ESP_ERROR_CHECK(httpd_start(&srv, &hc));

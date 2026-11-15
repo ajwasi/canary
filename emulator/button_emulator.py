@@ -150,6 +150,17 @@ class Button:
     def queue(self) -> list:
         return self._load("evq.json", [])
 
+    def identity(self) -> tuple:
+        """Fingerprints of the certificate and key in use, and whether a renewal is half done."""
+        def fp(name):
+            path = self.dir / name
+            return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
+        return fp("cert.pem"), fp("key.pem"), (self.dir / "key_pend.pem").exists()
+
+    def sound_file(self) -> bytes | None:
+        path = self.dir / "press.wav"
+        return path.read_bytes() if path.exists() else None
+
     def factory_reset(self) -> None:
         """Erase the flash: settings, identity, queue, sound and firmware version."""
         self.power_off()

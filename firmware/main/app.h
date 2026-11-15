@@ -14,8 +14,13 @@ void cfg_erase(const char *key);
 uint32_t cfg_get_u32(const char *key, uint32_t def);
 void cfg_set_u32(const char *key, uint32_t val);
 extern uint32_t g_boot_id;                          /* increments every boot */
-static inline bool time_is_valid(void) { return time(NULL) > 1700000000; }
-int64_t now_ms(void);                               /* unix time in milliseconds */
+
+/* ---- port: the few things that differ between the chip and the PC test build.
+ * On the chip they are in port_esp.c; on the PC in components/sim. ---- */
+int64_t now_ms(void);                               /* unix time in ms; time since boot until the clock is set */
+const char *fw_version(void);                       /* version of the running firmware */
+const char *storage_dir(void);                      /* folder that holds the press sound */
+static inline bool time_is_valid(void) { return now_ms() > 1700000000000LL; }
 
 /* ---- button.c ---- */
 typedef void (*button_cb_t)(void);

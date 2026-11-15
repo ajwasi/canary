@@ -1,19 +1,11 @@
 /* Settings stored in NVS namespace "cfg". With sdkconfig.prod.defaults NVS is encrypted. */
 #include <stdlib.h>
-#include <sys/time.h>
 #include "nvs_flash.h"
 #include "nvs.h"
 #include "app.h"
 
 static nvs_handle_t s_nvs;
 uint32_t g_boot_id;
-
-int64_t now_ms(void)
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (int64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
-}
 
 esp_err_t cfg_init(void)
 {
