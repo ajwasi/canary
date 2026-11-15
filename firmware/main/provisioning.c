@@ -11,6 +11,7 @@
 #include "esp_random.h"
 #include "esp_system.h"
 #include "esp_log.h"
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "cJSON.h"
@@ -174,6 +175,10 @@ static void dns_task(void *arg)
     for (;;) {
         struct sockaddr_in from;
         socklen_t flen = sizeof(from);
+        fd_set readable;
+        FD_ZERO(&readable);
+        FD_SET(sock, &readable);
+        if (select(sock + 1, &readable, NULL, NULL, NULL) <= 0) continue;         /* wait without holding the CPU */
         int len = recvfrom(sock, pkt, sizeof(pkt) - sizeof(answer), 0, (struct sockaddr *)&from, &flen);
         if (len < 17 || (pkt[2] & 0x80) || pkt[4] != 0 || pkt[5] != 1) continue;   /* one question only */
         int p = 12;
