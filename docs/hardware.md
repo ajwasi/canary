@@ -6,7 +6,7 @@ One unit is an Omron A22N switch in an A22NZ-A-B01Y control box, with a small ca
 
 ## Datasheets
 
-The files go in [datasheets/](datasheets/). They are not stored in the repository; [datasheets/README.md](datasheets/README.md) lists where to download each one.
+All files are in [datasheets/](datasheets/). They belong to the companies that make the products and are included for reference only; [datasheets/README.md](datasheets/README.md) lists each owner and source.
 
 | File | Covers | Used for |
 |---|---|---|

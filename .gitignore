@@ -11,5 +11,3 @@ server/.env
 __pycache__/
 .pytest_cache/
 emulator/state/
-docs/datasheets/*.pdf
-docs/datasheets/*.xlsx
