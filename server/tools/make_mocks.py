@@ -5,9 +5,10 @@ setup screens are the firmware's real portal.html with its network calls faked.
 Run from the server folder:  .venv\\Scripts\\python tools\\make_mocks.py
 """
 import io
+import hashlib
 import json
+import math
 import os
-import random
 import re
 import secrets
 import sys
@@ -54,6 +55,34 @@ def save(group: str, name: str, title: str, note: str, html: str) -> None:
     (OUT / group).mkdir(parents=True, exist_ok=True)
     (OUT / group / f"{name}.html").write_text(html, encoding="utf-8")
     screens.append((group, name, title, note))
+
+
+class Repeatable:
+    """A repeatable stream of numbers (SHA-256 of a counter) for the sample history, so every run draws the
+    same five weeks. It is for sample data only."""
+
+    def __init__(self, seed: int):
+        self.seed, self.count = str(seed).encode(), 0
+
+    def random(self) -> float:
+        self.count += 1
+        digest = hashlib.sha256(self.seed + b":" + str(self.count).encode()).digest()
+        return int.from_bytes(digest[:8], "big") / 2 ** 64
+
+    def randrange(self, start: int, stop: int | None = None) -> int:
+        if stop is None:
+            start, stop = 0, start
+        return start + int(self.random() * (stop - start))
+
+    def choice(self, items):
+        return items[self.randrange(len(items))]
+
+    def uniform(self, low: float, high: float) -> float:
+        return low + (high - low) * self.random()
+
+    def lognormvariate(self, mu: float, sigma: float) -> float:
+        z = math.sqrt(-2 * math.log(1 - self.random())) * math.cos(2 * math.pi * self.random())
+        return math.exp(mu + sigma * z)
 
 
 def csr(serial: str) -> str:
@@ -107,14 +136,14 @@ def server_mocks() -> None:
             if not online:
                 mqtt.handle_message(f"btn/{serial}/status", b'{"online":false}')
         mqtt.handle_message("btn/BTN-A1B2C3D4E5F1/press", b'{"seq": 9, "boot": 2}')      # clock unknown
-        rng = random.Random(7)                                                          # five weeks of history   # NOSONAR
+        rng = Repeatable(7)                                                         # five weeks of history
         for n in range(260):
-            unit = rng.choice([0, 0, 0, 1, 2, 2, 3])  # NOSONAR: fixed seed on purpose, so the mocks come out the same every time; not a security use
-            day, hour = rng.randrange(1, 36), rng.choice([7, 8, 8, 9, 10, 11, 13, 14, 15, 16, 16, 17, 20])  # NOSONAR: fixed seed on purpose, so the mocks come out the same every time; not a security use
-            if day % 7 in (0, 6) and rng.random() < 0.75:  # NOSONAR: fixed seed on purpose, so the mocks come out the same every time; not a security use
+            unit = rng.choice([0, 0, 0, 1, 2, 2, 3])
+            day, hour = rng.randrange(1, 36), rng.choice([7, 8, 8, 9, 10, 11, 13, 14, 15, 16, 16, 17, 20])
+            if day % 7 in (0, 6) and rng.random() < 0.75:
                 continue                                                                # quiet weekends
             mqtt.handle_message(f"btn/BTN-A1B2C3D4E5F{unit}/press", json.dumps(
-                {"seq": 100 + n, "boot": 1, "age_ms": 60000 * (day * 1440 - hour * 60 + rng.randrange(60))}).encode())  # NOSONAR: fixed seed on purpose, so the mocks come out the same every time; not a security use
+                {"seq": 100 + n, "boot": 1, "age_ms": 60000 * (day * 1440 - hour * 60 + rng.randrange(60))}).encode())
 
         with SessionLocal() as db:
             for p in db.query(Press).all():

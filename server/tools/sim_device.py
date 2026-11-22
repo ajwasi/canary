@@ -10,9 +10,11 @@ as the same button. Use --enrol-only to test enrolment without an MQTT broker.
 import argparse
 import hashlib
 import json
+import os
 import re
 import ssl
 import sys
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
@@ -34,6 +36,19 @@ def new_key_and_csr(serial: str):
     return key_pem, csr.public_bytes(serialization.Encoding.PEM).decode()
 
 
+def state_root(arg: str) -> Path:
+    """--state, resolved. It has to be inside the current folder, your home folder or the temp folder."""
+    path = os.path.realpath(arg)
+    for allowed in (os.getcwd(), os.path.expanduser("~"), tempfile.gettempdir()):
+        root = os.path.realpath(allowed)
+        try:
+            if os.path.commonpath([path, root]) == root:
+                return Path(path)
+        except ValueError:                       # different drives on Windows
+            continue
+    sys.exit(f"--state {arg!r} must be inside the current folder, your home folder or the temp folder")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--server", required=True, help="Server URL, e.g. https://buttons.example.com")
@@ -47,7 +62,7 @@ def main() -> None:
 
     if not re.fullmatch(r"BTN-[0-9A-F]{12}", args.serial):      # the shape the server accepts
         sys.exit("--serial must be BTN- plus 12 hex digits, for example BTN-5100000000A1")
-    base = Path(args.state).resolve()
+    base = state_root(args.state)
     state = (base / args.serial).resolve()
     if state.parent != base:
         sys.exit("--serial points outside the state folder")

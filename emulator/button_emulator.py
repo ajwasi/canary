@@ -38,6 +38,8 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import NameOID
 
+from state_path import safe_state_root
+
 HERE = Path(__file__).resolve().parent
 PORTAL_HTML = HERE.parent / "firmware" / "main" / "portal.html"      # the page the real unit serves
 
@@ -846,7 +848,7 @@ def main() -> None:
         a.http_base = a.http_base or "http://localhost:8000"
         a.cafile = a.cafile or str(Path(a.state) / "dev-server.pem")
         a.allow_http = True
-    button = Button(a.serial, Path(a.state), http_base=a.http_base, mqtt_port=a.mqtt_port, cafile=a.cafile,
+    button = Button(a.serial, safe_state_root(a.state), http_base=a.http_base, mqtt_port=a.mqtt_port, cafile=a.cafile,
                     allow_http=a.allow_http, timing=timing)
     button.power_on()
     print(f"Emulating {a.serial}\n  Control panel: http://localhost:{a.panel_port}\n"

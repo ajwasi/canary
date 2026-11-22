@@ -16,7 +16,6 @@ import argparse
 import asyncio
 import ipaddress
 import logging
-import os
 import ssl
 import struct
 from datetime import datetime, timedelta, timezone
@@ -27,6 +26,8 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import NameOID
 
+from state_path import safe_state_root
+
 log = logging.getLogger("broker")
 CONNECT, CONNACK, PUBLISH, PUBACK, SUBSCRIBE, SUBACK, UNSUBSCRIBE, UNSUBACK, PINGREQ, PINGRESP, DISCONNECT = \
     1, 2, 3, 4, 8, 9, 10, 11, 12, 13, 14
@@ -34,11 +35,10 @@ CONNECT, CONNACK, PUBLISH, PUBACK, SUBSCRIBE, SUBACK, UNSUBSCRIBE, UNSUBACK, PIN
 
 def ensure_dev_cert(state: Path) -> tuple[Path, Path]:
     """Self-signed server certificate for localhost. Emulated buttons trust it with --cafile."""
-    state = Path(os.path.realpath(state))            # the folder is the operator's own choice; the file names are fixed
     cert_file, key_file = state / "dev-server.pem", state / "dev-server.key"
     if cert_file.exists() and key_file.exists():
         return cert_file, key_file
-    state.mkdir(parents=True, exist_ok=True)  # NOSONAR: operator-chosen folder, fixed file names
+    state.mkdir(parents=True, exist_ok=True)
     key = ec.generate_private_key(ec.SECP256R1())
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")])
     now = datetime.now(timezone.utc)
@@ -49,9 +49,9 @@ def ensure_dev_cert(state: Path) -> tuple[Path, Path]:
                 [x509.DNSName("localhost"), x509.IPAddress(ipaddress.ip_address("127.0.0.1"))]), critical=False)
             .add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
             .sign(key, hashes.SHA256()))
-    key_file.write_bytes(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,  # NOSONAR
+    key_file.write_bytes(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
                                            serialization.NoEncryption()))
-    cert_file.write_bytes(cert.public_bytes(serialization.Encoding.PEM))  # NOSONAR
+    cert_file.write_bytes(cert.public_bytes(serialization.Encoding.PEM))
     return cert_file, key_file
 
 
@@ -265,6 +265,6 @@ if __name__ == "__main__":
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s broker: %(message)s", datefmt="%H:%M:%S")
     try:
-        asyncio.run(serve(Path(a.device_ca), Path(a.state), a.tls_port, a.plain_port))
+        asyncio.run(serve(Path(a.device_ca), safe_state_root(a.state), a.tls_port, a.plain_port))
     except KeyboardInterrupt:
         pass
