@@ -94,7 +94,7 @@ __attribute__((constructor)) static void sim_ctor(void)
 
     const char *dir = getenv("SIM_DIR");
     snprintf(g_sim.dir, sizeof(g_sim.dir), "%s", dir && dir[0] ? dir : "sim_state");
-    mkdir(g_sim.dir, 0755);
+    mkdir(g_sim.dir, 0700);
     snprintf(s_storage, sizeof(s_storage), "%s/spiffs", g_sim.dir);
 
     char flash[240];
@@ -156,7 +156,7 @@ __attribute__((weak)) esp_err_t esp_efuse_mac_get_default(uint8_t *mac)
 
 esp_err_t esp_vfs_spiffs_register(const esp_vfs_spiffs_conf_t *conf)
 {
-    mkdir(conf->base_path, 0755);
+    mkdir(conf->base_path, 0700);
     return ESP_OK;
 }
 

@@ -26,6 +26,8 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import NameOID
 
+from state_path import safe_state_root
+
 log = logging.getLogger("broker")
 CONNECT, CONNACK, PUBLISH, PUBACK, SUBSCRIBE, SUBACK, UNSUBSCRIBE, UNSUBACK, PINGREQ, PINGRESP, DISCONNECT = \
     1, 2, 3, 4, 8, 9, 10, 11, 12, 13, 14
@@ -263,6 +265,6 @@ if __name__ == "__main__":
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s broker: %(message)s", datefmt="%H:%M:%S")
     try:
-        asyncio.run(serve(Path(a.device_ca), Path(a.state), a.tls_port, a.plain_port))
+        asyncio.run(serve(Path(a.device_ca), safe_state_root(a.state), a.tls_port, a.plain_port))
     except KeyboardInterrupt:
         pass

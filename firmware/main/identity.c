@@ -165,7 +165,10 @@ int identity_enroll(void)
         result = 1;
         goto done;
     }
-    if (!(key = new_key_pem()) || !(csr = make_csr(key))) goto done;
+    key = new_key_pem();
+    if (!key) goto done;
+    csr = make_csr(key);
+    if (!csr) goto done;
 
     cJSON *j = cJSON_CreateObject();
     cJSON_AddStringToObject(j, "serial", identity_serial());

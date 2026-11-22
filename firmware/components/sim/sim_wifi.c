@@ -167,13 +167,16 @@ void sim_wifi_tick(void)
         s_joined = -1;
         esp_event_post(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, NULL, 0, portMAX_DELAY);
     }
-    if (s_connect_pending && --s_connect_pending == 0) {
-        s_joined = try_join();
-        if (s_joined >= 0) {
-            s_connected = 1;
-            esp_event_post(IP_EVENT, IP_EVENT_STA_GOT_IP, NULL, 0, portMAX_DELAY);
-        } else {
-            esp_event_post(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, NULL, 0, portMAX_DELAY);
+    if (s_connect_pending) {
+        s_connect_pending--;
+        if (s_connect_pending == 0) {
+            s_joined = try_join();
+            if (s_joined >= 0) {
+                s_connected = 1;
+                esp_event_post(IP_EVENT, IP_EVENT_STA_GOT_IP, NULL, 0, portMAX_DELAY);
+            } else {
+                esp_event_post(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, NULL, 0, portMAX_DELAY);
+            }
         }
     }
     /* SNTP keeps trying in the background, as on the chip. */

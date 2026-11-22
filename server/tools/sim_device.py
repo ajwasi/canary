@@ -10,8 +10,11 @@ as the same button. Use --enrol-only to test enrolment without an MQTT broker.
 import argparse
 import hashlib
 import json
+import os
+import re
 import ssl
 import sys
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
@@ -33,6 +36,27 @@ def new_key_and_csr(serial: str):
     return key_pem, csr.public_bytes(serialization.Encoding.PEM).decode()
 
 
+def clean_cert(text) -> bytes:
+    """Keep only a real certificate: parse what the server sent and write it back out as PEM."""
+    try:
+        return x509.load_pem_x509_certificate(text.encode()).public_bytes(serialization.Encoding.PEM)
+    except (ValueError, AttributeError):
+        sys.exit("The server did not send a valid certificate")
+
+
+def state_root(arg: str) -> Path:
+    """--state, resolved. It has to be inside the current folder, your home folder or the temp folder."""
+    path = os.path.realpath(arg)
+    for allowed in (os.getcwd(), os.path.expanduser("~"), tempfile.gettempdir()):
+        root = os.path.realpath(allowed)
+        try:
+            if os.path.commonpath([path, root]) == root:
+                return Path(path)
+        except ValueError:                       # different drives on Windows
+            continue
+    sys.exit(f"--state {arg!r} must be inside the current folder, your home folder or the temp folder")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--server", required=True, help="Server URL, e.g. https://buttons.example.com")
@@ -44,7 +68,12 @@ def main() -> None:
     ap.add_argument("--enrol-only", action="store_true")
     args = ap.parse_args()
 
-    state = Path(args.state) / args.serial
+    if not re.fullmatch(r"BTN-[0-9A-F]{12}", args.serial):      # the shape the server accepts
+        sys.exit("--serial must be BTN- plus 12 hex digits, for example BTN-5100000000A1")
+    base = state_root(args.state)
+    state = (base / args.serial).resolve()
+    if state.parent != base:
+        sys.exit("--serial points outside the state folder")
     state.mkdir(parents=True, exist_ok=True)
     key_file, cert_file, meta_file = state / "key.pem", state / "cert.pem", state / "meta.json"
     meta = json.loads(meta_file.read_text()) if meta_file.exists() else {"seq": 0, "boot": 0, "fw": "0.1.0", "audio_sha": ""}
@@ -66,7 +95,7 @@ def main() -> None:
         except urllib.error.HTTPError as exc:
             sys.exit(f"Enrolment refused: HTTP {exc.code} {exc.read().decode(errors='replace')}")
         key_file.write_bytes(key_pem)
-        cert_file.write_text(cert)
+        cert_file.write_bytes(clean_cert(cert))
         print(f"Enrolled as {args.serial}.")
     save_meta()
     if args.enrol_only:
@@ -104,7 +133,7 @@ def main() -> None:
             meta["audio_sha"] = cmd["sha256"]
         elif kind == "cert" and pending.get("key"):
             key_file.write_bytes(pending.pop("key"))
-            cert_file.write_text(cmd["cert"])
+            cert_file.write_bytes(clean_cert(cmd["cert"]))
             print("Certificate renewed (used from the next start).")
         elif kind in ("identify", "reboot", "name"):
             print(f"Command: {cmd}")

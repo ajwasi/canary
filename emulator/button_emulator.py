@@ -21,6 +21,7 @@ import collections
 import hashlib
 import io
 import json
+import re
 import shutil
 import ssl
 import threading
@@ -37,6 +38,8 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import NameOID
 
+from state_path import safe_state_root
+
 HERE = Path(__file__).resolve().parent
 PORTAL_HTML = HERE.parent / "firmware" / "main" / "portal.html"      # the page the real unit serves
 
@@ -50,6 +53,7 @@ FW_MAX_BYTES = 0x300000     # partitions.csv ota slot
 WIFI_FAILS_TO_SETUP = 6     # app_main.c
 CLAIM_REJECTS_TO_SETUP = 5  # app_main.c
 FACTORY_FW = "0.1.0"        # firmware/version.txt
+FAKE_IP = "192.0.2.73"      # the simulated unit's LAN address (a documentation address, RFC 5737)
 
 
 class Timing:
@@ -64,15 +68,30 @@ class Timing:
     boot_s = 0.5
 
 
+SERIAL_RE = re.compile(r"^BTN-[0-9A-F]{12}$")      # the shape the server accepts
+
+
+def unit_dir(state_dir, serial: str) -> Path:
+    """The unit's own folder inside state_dir. A serial that is not BTN- plus 12 hex digits, or that would
+    land anywhere else, is refused."""
+    if not SERIAL_RE.fullmatch(serial):
+        raise ValueError(f"bad serial {serial!r}: expected BTN- plus 12 hex digits")
+    base = Path(state_dir).resolve()
+    path = (base / serial).resolve()
+    if path.parent != base:
+        raise ValueError("serial points outside the state folder")
+    return path
+
+
 class Environment:
     """The world around the unit. Change these from the control panel or a test."""
 
     def __init__(self):
-        self.networks = [   # ssid, password (None = open network), channel, rssi
-            {"ssid": "Warehouse-Staff", "password": "blue-forklift-42", "channel": 44, "rssi": -48},
-            {"ssid": "Warehouse-Staff", "password": "blue-forklift-42", "channel": 6, "rssi": -44},
-            {"ssid": "Scanner-Net", "password": "scan-scan-scan", "channel": 11, "rssi": -61},
-            {"ssid": "Tulsa-Guest", "password": None, "channel": 1, "rssi": -57},
+        self.networks = [   # ssid, psk (the network's key; None = open network), channel, rssi
+            {"ssid": "Warehouse-Staff", "psk": "blue-forklift-42", "channel": 44, "rssi": -48},
+            {"ssid": "Warehouse-Staff", "psk": "blue-forklift-42", "channel": 6, "rssi": -44},
+            {"ssid": "Scanner-Net", "psk": "scan-scan-scan", "channel": 11, "rssi": -61},
+            {"ssid": "Tulsa-Guest", "psk": None, "channel": 1, "rssi": -57},
         ]
         self.wifi_up = True         # is the site Wi-Fi (and internet) reachable?
         self.clock_up = True        # can the unit reach a time server?
@@ -82,7 +101,7 @@ class Button:
     def __init__(self, serial: str, state_dir: Path, *, http_base: str | None = None, mqtt_port: int = 8883,
                  cafile: str | None = None, allow_http: bool = False, timing: Timing | None = None):
         self.serial = serial
-        self.dir = Path(state_dir) / serial
+        self.dir = unit_dir(state_dir, serial)
         self.dir.mkdir(parents=True, exist_ok=True)
         self.http_base, self.mqtt_port, self.cafile, self.allow_http = http_base, mqtt_port, cafile, allow_http
         self.t = timing or Timing()
@@ -148,7 +167,9 @@ class Button:
         return cert.not_valid_before_utc.timestamp(), cert.not_valid_after_utc.timestamp()
 
     def queue(self) -> list:
-        return self._load("evq.json", [])
+        """The unsent presses, rebuilt field by field so only numbers come back from the file."""
+        return [{"seq": int(e["seq"]), "boot": int(e["boot"]), "ts": float(e["ts"]), "up": float(e["up"])}
+                for e in self._load("evq.json", [])]
 
     def identity(self) -> tuple:
         """Fingerprints of the certificate and key in use, and whether a renewal is half done."""
@@ -237,13 +258,12 @@ class Button:
     def _on_press(self) -> None:
         self._play_sound()
         q = self.queue()
-        meta = self._load("evq_meta.json", {"tail": 0})
-        item = {"seq": meta["tail"], "boot": self.cfg.get("boot", 0),
+        tail = int(self._load("evq_meta.json", {"tail": 0})["tail"])
+        item = {"seq": tail, "boot": int(self.cfg.get("boot", 0)),
                 "ts": round(time.time(), 3) if self.clock_set else 0, "up": time.monotonic() - self._boot_time}
         q.append(item)
-        meta["tail"] += 1
         self._store("evq.json", q[-EVQ_MAX:])
-        self._store("evq_meta.json", meta)
+        self._store("evq_meta.json", {"tail": tail + 1})
         self.log(f"pressed (seq {item['seq']}, {len(q)} waiting to send)")
 
     def _play_sound(self) -> None:
@@ -411,7 +431,7 @@ class Button:
                 "host": self.cfg.get("host", "buttons.example.com"), "enrolled": self.has_cert()}
 
     def portal_scan(self) -> list:
-        return [{"ssid": n["ssid"], "rssi": n["rssi"], "band5": n["channel"] > 14, "secure": n["password"] is not None}
+        return [{"ssid": n["ssid"], "rssi": n["rssi"], "band5": n["channel"] > 14, "secure": n["psk"] is not None}
                 for n in self.env.networks] if self.env.wifi_up else []
 
     def portal_save(self, body: dict) -> dict:
@@ -449,13 +469,13 @@ class Button:
         if not self.env.wifi_up:
             return False
         cfg = self.cfg
-        usable = [n for n in self.env.networks if n["ssid"] == cfg.get("ssid") and n["password"] is not None
+        usable = [n for n in self.env.networks if n["ssid"] == cfg.get("ssid") and n["psk"] is not None
                   and not (n["channel"] > 14 and n["rssi"] < -78)]
         if not usable:
             self.log("no WPA2/WPA3 access point found for the configured network")
             return False
         best = max(usable, key=lambda n: n["rssi"] + (15 if n["channel"] > 14 else 0))
-        if best["password"] != cfg.get("pass"):
+        if best["psk"] != cfg.get("pass"):
             self.log(f"joining {best['ssid']} failed: wrong password")
             return False
         self.wifi = best
@@ -612,7 +632,7 @@ class Button:
         self._client.publish(f"btn/{self.serial}/status", json.dumps({
             "online": True, "serial": self.serial, "name": cfg.get("name", ""), "fw": cfg.get("fw", FACTORY_FW),
             "rssi": self.wifi["rssi"] if self.wifi else 0, "channel": self.wifi["channel"] if self.wifi else 0,
-            "ip": "192.168.1.73", "uptime_s": int(time.monotonic() - self._boot_time), "pending": len(self.queue()),
+            "ip": FAKE_IP, "uptime_s": int(time.monotonic() - self._boot_time), "pending": len(self.queue()),
             "cert_not_after": int(self.cert_times()[1]), "audio_sha": cfg.get("audio_sha", ""),
             "nc_fault": self.nc_fault}), qos=1, retain=True)
 
@@ -829,7 +849,7 @@ def main() -> None:
         a.http_base = a.http_base or "http://localhost:8000"
         a.cafile = a.cafile or str(Path(a.state) / "dev-server.pem")
         a.allow_http = True
-    button = Button(a.serial, Path(a.state), http_base=a.http_base, mqtt_port=a.mqtt_port, cafile=a.cafile,
+    button = Button(a.serial, safe_state_root(a.state), http_base=a.http_base, mqtt_port=a.mqtt_port, cafile=a.cafile,
                     allow_http=a.allow_http, timing=timing)
     button.power_on()
     print(f"Emulating {a.serial}\n  Control panel: http://localhost:{a.panel_port}\n"

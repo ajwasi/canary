@@ -22,7 +22,6 @@
 
 static const char *TAG = "setup";
 extern const char portal_html_start[] asm("_binary_portal_html_start");
-extern const char portal_html_end[] asm("_binary_portal_html_end");
 static volatile bool s_saved;
 
 /* Per-device AP password, created on first use and printed on the unit's label. */
@@ -52,8 +51,8 @@ static esp_err_t send_json(httpd_req_t *req, cJSON *json)
 static esp_err_t h_root(httpd_req_t *req)
 {
     httpd_resp_set_type(req, "text/html");
-    /* EMBED_TXTFILES appends a NUL; do not send it. */
-    return httpd_resp_send(req, portal_html_start, portal_html_end - portal_html_start - 1);
+    /* EMBED_TXTFILES appends a NUL, so the page is an ordinary C string. */
+    return httpd_resp_send(req, portal_html_start, HTTPD_RESP_USE_STRLEN);
 }
 
 static esp_err_t h_info(httpd_req_t *req)
@@ -157,7 +156,9 @@ static esp_err_t h_save(httpd_req_t *req)
 static esp_err_t h_redirect(httpd_req_t *req, httpd_err_code_t code)
 {
     httpd_resp_set_status(req, "302 Found");
-    httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+    /* Plain HTTP to the unit's own fixed AP address is deliberate: a phone that has just joined the setup
+     * network cannot verify a certificate for it, and nothing sensitive crosses this redirect. */
+    httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/"); // NOSONAR
     return httpd_resp_send(req, NULL, 0);
 }
 

@@ -68,6 +68,8 @@ td.time { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .btnrow .right { text-align: right; color: var(--muted); font-size: 13px; white-space: nowrap; }
 
 label { display: block; font-weight: 600; font-size: 13px; margin: 10px 0 3px; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+legend { padding: 0; font-weight: 600; font-size: 13px; margin: 10px 0 3px; }
 input[type=text], input[type=email], input[type=password], input[type=date], input[type=file], select, textarea {
   width: 100%; padding: 8px 10px; font: inherit; color: var(--ink); background: var(--bg);
   border: 1px solid var(--line); border-radius: 6px;
@@ -138,7 +140,7 @@ dd { margin: 0; overflow-wrap: anywhere; }
     <a href="users.html" class="">Users</a>
     <a href="account.html" class="">Account</a>
   </nav>
-  <form onsubmit="return false" method="post" action="/logout"><input type="hidden" name="csrf" value="KgX9H4gd6kPKMsCLedYzYuqFh_DeBmbc"><button class="link">Sign out</button></form>
+  <form onsubmit="return false" method="post" action="/logout"><input type="hidden" name="csrf" value="g2ZkDh1w3C08cFcbwHQjHvu1DdBj8Reg"><button class="link">Sign out</button></form>
 </div></header>
 
 <main>
@@ -153,14 +155,14 @@ dd { margin: 0; overflow-wrap: anywhere; }
       <thead><tr><th>Version</th><th class="num">Size</th><th>Uploaded</th><th></th></tr></thead>
       <tbody>
       
-      <tr><td>0.2.0</td><td class="num">1152 KB</td><td>2026-11-14 18:26:41 EST</td>
-        <td><form onsubmit="return false" method="post" action="/updates/firmware/1/delete"><input type="hidden" name="csrf" value="KgX9H4gd6kPKMsCLedYzYuqFh_DeBmbc"><button class="link">Delete</button></form></td></tr>
+      <tr><td>0.2.0</td><td class="num">1152 KB</td><td>2026-11-22 00:13:39 EST</td>
+        <td><form onsubmit="return false" method="post" action="/updates/firmware/1/delete"><input type="hidden" name="csrf" value="g2ZkDh1w3C08cFcbwHQjHvu1DdBj8Reg"><button class="link">Delete</button></form></td></tr>
       
       </tbody>
     </table></div>
     
     <form onsubmit="return false" method="post" action="/updates/firmware" enctype="multipart/form-data">
-      <input type="hidden" name="csrf" value="KgX9H4gd6kPKMsCLedYzYuqFh_DeBmbc">
+      <input type="hidden" name="csrf" value="g2ZkDh1w3C08cFcbwHQjHvu1DdBj8Reg">
       <label for="version">Version</label><input type="text" id="version" name="version" maxlength="31" required placeholder="Must match the version built into the file">
       <label for="fwfile">Signed image (.bin)</label><input type="file" id="fwfile" name="file" accept=".bin" required>
       <button>Upload firmware</button>
@@ -173,14 +175,14 @@ dd { margin: 0; overflow-wrap: anywhere; }
       <thead><tr><th>Name</th><th class="num">Size</th><th>Uploaded</th><th></th></tr></thead>
       <tbody>
       
-      <tr><td><a href="#">Soft chime</a></td><td class="num">47 KB</td><td>2026-11-14 18:26:41 EST</td>
-        <td><form onsubmit="return false" method="post" action="/updates/audio/1/delete"><input type="hidden" name="csrf" value="KgX9H4gd6kPKMsCLedYzYuqFh_DeBmbc"><button class="link">Delete</button></form></td></tr>
+      <tr><td><a href="#">Soft chime</a></td><td class="num">47 KB</td><td>2026-11-22 00:13:39 EST</td>
+        <td><form onsubmit="return false" method="post" action="/updates/audio/1/delete"><input type="hidden" name="csrf" value="g2ZkDh1w3C08cFcbwHQjHvu1DdBj8Reg"><button class="link">Delete</button></form></td></tr>
       
       </tbody>
     </table></div>
     
     <form onsubmit="return false" method="post" action="/updates/audio" enctype="multipart/form-data">
-      <input type="hidden" name="csrf" value="KgX9H4gd6kPKMsCLedYzYuqFh_DeBmbc">
+      <input type="hidden" name="csrf" value="g2ZkDh1w3C08cFcbwHQjHvu1DdBj8Reg">
       <label for="clipname">Name</label><input type="text" id="clipname" name="name" maxlength="100">
       <label for="wavfile">WAV file (16-bit PCM, up to 1.5 MB)</label><input type="file" id="wavfile" name="file" accept=".wav" required>
       <button>Upload sound</button>
@@ -195,52 +197,56 @@ dd { margin: 0; overflow-wrap: anywhere; }
   
   
   <form onsubmit="return false" method="post" action="/updates/push">
-    <input type="hidden" name="csrf" value="KgX9H4gd6kPKMsCLedYzYuqFh_DeBmbc">
+    <input type="hidden" name="csrf" value="g2ZkDh1w3C08cFcbwHQjHvu1DdBj8Reg">
     <input type="hidden" name="kind" value="firmware">
     <label for="item-firmware">Firmware</label>
     <select name="item" id="item-firmware">
       <option value="1">0.2.0</option>
     </select>
-    <label>Buttons</label>
-    
-    <label class="check"><input type="checkbox" name="targets" value="1" checked> Front desk
-      <span class="sub">firmware 0.1.0, online</span></label>
-    
-    <label class="check"><input type="checkbox" name="targets" value="2" checked> Loading dock
-      <span class="sub">firmware 0.1.0, offline</span></label>
-    
-    <label class="check"><input type="checkbox" name="targets" value="3" checked> Reception
-      <span class="sub">firmware 0.1.0, online</span></label>
-    
-    <label class="check"><input type="checkbox" name="targets" value="4" checked> Workshop
-      <span class="sub">firmware 0.1.0, online</span></label>
-    
+    <fieldset>
+      <legend>Buttons</legend>
+      
+      <label class="check"><input type="checkbox" name="targets" value="1" checked> Front desk
+        <span class="sub">firmware 0.1.0, online</span></label>
+      
+      <label class="check"><input type="checkbox" name="targets" value="2" checked> Loading dock
+        <span class="sub">firmware 0.1.0, offline</span></label>
+      
+      <label class="check"><input type="checkbox" name="targets" value="3" checked> Reception
+        <span class="sub">firmware 0.1.0, online</span></label>
+      
+      <label class="check"><input type="checkbox" name="targets" value="4" checked> Workshop
+        <span class="sub">firmware 0.1.0, online</span></label>
+      
+    </fieldset>
     <button>Send firmware</button>
   </form>
   
   
   
   <form onsubmit="return false" method="post" action="/updates/push">
-    <input type="hidden" name="csrf" value="KgX9H4gd6kPKMsCLedYzYuqFh_DeBmbc">
+    <input type="hidden" name="csrf" value="g2ZkDh1w3C08cFcbwHQjHvu1DdBj8Reg">
     <input type="hidden" name="kind" value="audio">
     <label for="item-audio">Press sound</label>
     <select name="item" id="item-audio">
       <option value="1">Soft chime</option>
     </select>
-    <label>Buttons</label>
-    
-    <label class="check"><input type="checkbox" name="targets" value="1" checked> Front desk
-      <span class="sub">built-in beep, online</span></label>
-    
-    <label class="check"><input type="checkbox" name="targets" value="2" checked> Loading dock
-      <span class="sub">built-in beep, offline</span></label>
-    
-    <label class="check"><input type="checkbox" name="targets" value="3" checked> Reception
-      <span class="sub">built-in beep, online</span></label>
-    
-    <label class="check"><input type="checkbox" name="targets" value="4" checked> Workshop
-      <span class="sub">built-in beep, online</span></label>
-    
+    <fieldset>
+      <legend>Buttons</legend>
+      
+      <label class="check"><input type="checkbox" name="targets" value="1" checked> Front desk
+        <span class="sub">built-in beep, online</span></label>
+      
+      <label class="check"><input type="checkbox" name="targets" value="2" checked> Loading dock
+        <span class="sub">built-in beep, offline</span></label>
+      
+      <label class="check"><input type="checkbox" name="targets" value="3" checked> Reception
+        <span class="sub">built-in beep, online</span></label>
+      
+      <label class="check"><input type="checkbox" name="targets" value="4" checked> Workshop
+        <span class="sub">built-in beep, online</span></label>
+      
+    </fieldset>
     <button>Send press sound</button>
   </form>
   

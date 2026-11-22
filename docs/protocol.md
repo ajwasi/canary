@@ -60,7 +60,7 @@ Status payload:
 
 ```json
 { "online": true, "serial": "BTN-A1B2C3D4E5F6", "name": "Front desk", "fw": "0.1.0",
-  "rssi": -58, "channel": 44, "ip": "192.168.1.73", "uptime_s": 86400, "pending": 0,
+  "rssi": -58, "channel": 44, "ip": "192.0.2.73", "uptime_s": 86400, "pending": 0,
   "cert_not_after": 1797260405, "audio_sha": "9f2c…", "nc_fault": false }
 ```
 

@@ -5,18 +5,21 @@ setup screens are the firmware's real portal.html with its network calls faked.
 Run from the server folder:  .venv\\Scripts\\python tools\\make_mocks.py
 """
 import io
+import hashlib
 import json
+import math
 import os
-import random
 import re
+import secrets
 import sys
 import tempfile
 import wave
 from datetime import timedelta
 from pathlib import Path
 
+ADMIN_PW = secrets.token_urlsafe(18)       # new every run; the sample site exists only for this run
 os.environ.update(DATA_DIR=tempfile.mkdtemp(), MQTT_ENABLED="0", ADMIN_EMAIL="morgan@example.com",
-                  ADMIN_PASSWORD="correct horse battery", DEFAULT_TZ="America/New_York")
+                  ADMIN_PASSWORD=ADMIN_PW, DEFAULT_TZ="America/New_York")
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "server"))
 
@@ -54,6 +57,34 @@ def save(group: str, name: str, title: str, note: str, html: str) -> None:
     screens.append((group, name, title, note))
 
 
+class Repeatable:
+    """A repeatable stream of numbers (SHA-256 of a counter) for the sample history, so every run draws the
+    same five weeks. It is for sample data only."""
+
+    def __init__(self, seed: int):
+        self.seed, self.count = str(seed).encode(), 0
+
+    def random(self) -> float:
+        self.count += 1
+        digest = hashlib.sha256(self.seed + b":" + str(self.count).encode()).digest()
+        return int.from_bytes(digest[:8], "big") / 2 ** 64
+
+    def randrange(self, start: int, stop: int | None = None) -> int:
+        if stop is None:
+            start, stop = 0, start
+        return start + int(self.random() * (stop - start))
+
+    def choice(self, items):
+        return items[self.randrange(len(items))]
+
+    def uniform(self, low: float, high: float) -> float:
+        return low + (high - low) * self.random()
+
+    def lognormvariate(self, mu: float, sigma: float) -> float:
+        z = math.sqrt(-2 * math.log(1 - self.random())) * math.cos(2 * math.pi * self.random())
+        return math.exp(mu + sigma * z)
+
+
 def csr(serial: str) -> str:
     key = ec.generate_private_key(ec.SECP256R1())
     req = (x509.CertificateSigningRequestBuilder()
@@ -82,7 +113,7 @@ def server_mocks() -> None:
         save(S, "sign-in-refused", "Sign in refused", "One message for every failure, so it never reveals which part was wrong.",
              anon.post("/login", data={"email": "morgan@example.com", "password": "nope"}).text)
 
-        a = Browser("morgan@example.com", "correct horse battery")
+        a = Browser("morgan@example.com", ADMIN_PW)
         for name in ("Dana Whitfield", "Sam Ortega", "Priya Raman"):
             a.post("/people", {"name": name})
         a.post("/locations", {"name": "Tulsa warehouse", "address": "410 E Archer St, Tulsa, OK",
@@ -105,7 +136,7 @@ def server_mocks() -> None:
             if not online:
                 mqtt.handle_message(f"btn/{serial}/status", b'{"online":false}')
         mqtt.handle_message("btn/BTN-A1B2C3D4E5F1/press", b'{"seq": 9, "boot": 2}')      # clock unknown
-        rng = random.Random(7)                                                          # five weeks of history
+        rng = Repeatable(7)                                                         # five weeks of history
         for n in range(260):
             unit = rng.choice([0, 0, 0, 1, 2, 2, 3])
             day, hour = rng.randrange(1, 36), rng.choice([7, 8, 8, 9, 10, 11, 13, 14, 15, 16, 16, 17, 20])
@@ -148,7 +179,7 @@ def server_mocks() -> None:
         save(S, "button-revoked", "Button: revoked", "A revoked button's presses are ignored. It can be restored.", a.get("/buttons/4"))
         a.post("/buttons/4/restore")
         mqtt.handle_message("btn/BTN-A1B2C3D4E5F3/status", json.dumps(
-            {"online": True, "fw": "0.1.0", "rssi": -70, "channel": 11, "ip": "192.168.1.73", "nc_fault": True}).encode())
+            {"online": True, "fw": "0.1.0", "rssi": -70, "channel": 11, "ip": "192.0.2.73", "nc_fault": True}).encode())
         save(S, "updates", "Updates", "Upload firmware and press sounds, then send them to chosen buttons.", a.get("/updates"))
 
         a.post("/users", {"email": "lee@example.com", "name": "Lee Okafor", "role": "manager"})
