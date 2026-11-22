@@ -167,7 +167,9 @@ class Button:
         return cert.not_valid_before_utc.timestamp(), cert.not_valid_after_utc.timestamp()
 
     def queue(self) -> list:
-        return self._load("evq.json", [])
+        """The unsent presses, rebuilt field by field so only numbers come back from the file."""
+        return [{"seq": int(e["seq"]), "boot": int(e["boot"]), "ts": float(e["ts"]), "up": float(e["up"])}
+                for e in self._load("evq.json", [])]
 
     def identity(self) -> tuple:
         """Fingerprints of the certificate and key in use, and whether a renewal is half done."""
