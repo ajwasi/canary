@@ -256,13 +256,12 @@ class Button:
     def _on_press(self) -> None:
         self._play_sound()
         q = self.queue()
-        meta = self._load("evq_meta.json", {"tail": 0})
-        item = {"seq": meta["tail"], "boot": int(self.cfg.get("boot", 0)),
+        tail = int(self._load("evq_meta.json", {"tail": 0})["tail"])
+        item = {"seq": tail, "boot": int(self.cfg.get("boot", 0)),
                 "ts": round(time.time(), 3) if self.clock_set else 0, "up": time.monotonic() - self._boot_time}
         q.append(item)
-        meta["tail"] += 1
         self._store("evq.json", q[-EVQ_MAX:])
-        self._store("evq_meta.json", meta)
+        self._store("evq_meta.json", {"tail": tail + 1})
         self.log(f"pressed (seq {item['seq']}, {len(q)} waiting to send)")
 
     def _play_sound(self) -> None:
