@@ -1,0 +1,17 @@
+# Runtime dependencies. Edit this file, then regenerate the hash-locked requirements.txt:
+#   uv pip compile --universal --generate-hashes --python-version 3.11 --no-header requirements.in -o requirements.txt
+# (pip is listed so the Docker image gets a current pip from the same locked, hash-checked install.)
+pip==26.3
+fastapi==0.163.0
+starlette==1.10.0
+uvicorn[standard]==0.32.1
+sqlalchemy==2.0.36
+jinja2==3.1.6
+python-multipart==0.0.31
+cryptography==50.0.0
+argon2-cffi==23.1.0
+pyotp==2.9.0
+segno==1.6.1
+paho-mqtt==2.1.0
+psycopg[binary]==3.2.3
+tzdata==2024.2

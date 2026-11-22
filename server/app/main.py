@@ -64,8 +64,10 @@ def bootstrap() -> None:
 async def lifespan(app: FastAPI):
     bootstrap()
     mqtt.start()
-    yield
-    mqtt.stop()
+    try:
+        yield
+    finally:
+        mqtt.stop()
 
 
 app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)

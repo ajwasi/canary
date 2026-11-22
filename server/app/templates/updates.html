@@ -60,11 +60,13 @@
     <select name="item" id="item-{{ kind }}">
       {% for it in items %}<option value="{{ it.id }}">{{ it.version if kind == "firmware" else it.name }}</option>{% endfor %}
     </select>
-    <label>Buttons</label>
-    {% for b in buttons %}
-    <label class="check"><input type="checkbox" name="targets" value="{{ b.id }}" checked> {{ b.name }}
-      <span class="sub">{{ ("firmware " ~ (b.fw or "unknown")) if kind == "firmware" else ("custom sound" if b.audio_sha else "built-in beep") }}, {{ "online" if b.online else "offline" }}</span></label>
-    {% endfor %}
+    <fieldset>
+      <legend>Buttons</legend>
+      {% for b in buttons %}
+      <label class="check"><input type="checkbox" name="targets" value="{{ b.id }}" checked> {{ b.name }}
+        <span class="sub">{{ ("firmware " ~ (b.fw or "unknown")) if kind == "firmware" else ("custom sound" if b.audio_sha else "built-in beep") }}, {{ "online" if b.online else "offline" }}</span></label>
+      {% endfor %}
+    </fieldset>
     <button>Send {{ label | lower }}</button>
   </form>
   {% endif %}

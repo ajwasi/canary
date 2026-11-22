@@ -132,12 +132,15 @@ void app_main(void)
         int r = identity_enroll();
         if (r == 0) break;
         s_led = LED_FAULT;
-        if (r == 1 && ++rejected >= 5) {
-            ESP_LOGE(TAG, "claim code rejected; returning to setup mode");
-            cfg_erase("claim");
-            cfg_erase("ssid");
-            cfg_erase("pass");
-            esp_restart();
+        if (r == 1) {
+            rejected++;
+            if (rejected >= 5) {
+                ESP_LOGE(TAG, "claim code rejected; returning to setup mode");
+                cfg_erase("claim");
+                cfg_erase("ssid");
+                cfg_erase("pass");
+                esp_restart();
+            }
         }
         rollback_if_stuck();
         vTaskDelay(pdMS_TO_TICKS(CONFIG_BTN_ENROLL_RETRY_S * 1000));

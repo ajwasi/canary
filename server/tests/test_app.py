@@ -139,7 +139,7 @@ def test_full_flow(client, admin):
 
     # Status and last will.
     mqtt.handle_message(f"btn/{SERIAL}/status", json.dumps(
-        {"online": True, "fw": "0.1.0", "rssi": -58, "channel": 44, "ip": "192.168.1.73", "pending": 0}).encode())
+        {"online": True, "fw": "0.1.0", "rssi": -58, "channel": 44, "ip": "192.0.2.73", "pending": 0}).encode())
     page = admin.get("/buttons/1").text
     assert "Online" in page and "5 GHz" in page and "0.1.0" in page
     assert "Online" in admin.get("/?by=location").text

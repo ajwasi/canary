@@ -35,9 +35,12 @@ static void button_task(void *arg)
         /* Healthy wiring: exactly one of NO / NC is closed. NC closed reads LOW. */
         bool nc_closed = gpio_get_level(PIN_BTN_NC) == 0;
         if (nc_closed == raw) {
-            if (disagree_ms < NC_FAULT_MS && (disagree_ms += POLL_MS) >= NC_FAULT_MS) {
-                s_nc_fault = true;
-                ESP_LOGW(TAG, "NO/NC contacts agree: wiring fault");
+            if (disagree_ms < NC_FAULT_MS) {
+                disagree_ms += POLL_MS;
+                if (disagree_ms >= NC_FAULT_MS) {
+                    s_nc_fault = true;
+                    ESP_LOGW(TAG, "NO/NC contacts agree: wiring fault");
+                }
             }
         } else {
             disagree_ms = 0;

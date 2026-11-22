@@ -35,6 +35,13 @@ set MQTT_ENABLED=0
 .venv\Scripts\python -m uvicorn app.main:app --port 8000
 ```
 
+`requirements.txt` and `requirements-dev.txt` are hash-locked (every package and its dependencies, pinned with checksums), and the Docker image and CI install them with `--require-hashes --only-binary=:all:`. To change a dependency, edit `requirements.in` (or `requirements-dev.in`) and regenerate:
+
+```
+uv pip compile --universal --generate-hashes --python-version 3.11 --no-header requirements.in -o requirements.txt
+uv pip compile --universal --generate-hashes --python-version 3.11 --no-header requirements-dev.in -o requirements-dev.txt
+```
+
 Create the first administrator, which prompts for a password:
 
 ```

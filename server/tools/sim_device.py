@@ -10,6 +10,7 @@ as the same button. Use --enrol-only to test enrolment without an MQTT broker.
 import argparse
 import hashlib
 import json
+import re
 import ssl
 import sys
 import time
@@ -44,7 +45,12 @@ def main() -> None:
     ap.add_argument("--enrol-only", action="store_true")
     args = ap.parse_args()
 
-    state = Path(args.state) / args.serial
+    if not re.fullmatch(r"BTN-[0-9A-F]{12}", args.serial):      # the shape the server accepts
+        sys.exit("--serial must be BTN- plus 12 hex digits, for example BTN-5100000000A1")
+    base = Path(args.state).resolve()
+    state = (base / args.serial).resolve()
+    if state.parent != base:
+        sys.exit("--serial points outside the state folder")
     state.mkdir(parents=True, exist_ok=True)
     key_file, cert_file, meta_file = state / "key.pem", state / "cert.pem", state / "meta.json"
     meta = json.loads(meta_file.read_text()) if meta_file.exists() else {"seq": 0, "boot": 0, "fw": "0.1.0", "audio_sha": ""}

@@ -9,14 +9,16 @@ import json
 import os
 import random
 import re
+import secrets
 import sys
 import tempfile
 import wave
 from datetime import timedelta
 from pathlib import Path
 
+ADMIN_PW = secrets.token_urlsafe(18)       # new every run; the sample site exists only for this run
 os.environ.update(DATA_DIR=tempfile.mkdtemp(), MQTT_ENABLED="0", ADMIN_EMAIL="morgan@example.com",
-                  ADMIN_PASSWORD="correct horse battery", DEFAULT_TZ="America/New_York")
+                  ADMIN_PASSWORD=ADMIN_PW, DEFAULT_TZ="America/New_York")
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "server"))
 
@@ -82,7 +84,7 @@ def server_mocks() -> None:
         save(S, "sign-in-refused", "Sign in refused", "One message for every failure, so it never reveals which part was wrong.",
              anon.post("/login", data={"email": "morgan@example.com", "password": "nope"}).text)
 
-        a = Browser("morgan@example.com", "correct horse battery")
+        a = Browser("morgan@example.com", ADMIN_PW)
         for name in ("Dana Whitfield", "Sam Ortega", "Priya Raman"):
             a.post("/people", {"name": name})
         a.post("/locations", {"name": "Tulsa warehouse", "address": "410 E Archer St, Tulsa, OK",
@@ -105,14 +107,14 @@ def server_mocks() -> None:
             if not online:
                 mqtt.handle_message(f"btn/{serial}/status", b'{"online":false}')
         mqtt.handle_message("btn/BTN-A1B2C3D4E5F1/press", b'{"seq": 9, "boot": 2}')      # clock unknown
-        rng = random.Random(7)                                                          # five weeks of history
+        rng = random.Random(7)                                                          # five weeks of history   # NOSONAR
         for n in range(260):
-            unit = rng.choice([0, 0, 0, 1, 2, 2, 3])
-            day, hour = rng.randrange(1, 36), rng.choice([7, 8, 8, 9, 10, 11, 13, 14, 15, 16, 16, 17, 20])
-            if day % 7 in (0, 6) and rng.random() < 0.75:
+            unit = rng.choice([0, 0, 0, 1, 2, 2, 3])  # NOSONAR: fixed seed on purpose, so the mocks come out the same every time; not a security use
+            day, hour = rng.randrange(1, 36), rng.choice([7, 8, 8, 9, 10, 11, 13, 14, 15, 16, 16, 17, 20])  # NOSONAR: fixed seed on purpose, so the mocks come out the same every time; not a security use
+            if day % 7 in (0, 6) and rng.random() < 0.75:  # NOSONAR: fixed seed on purpose, so the mocks come out the same every time; not a security use
                 continue                                                                # quiet weekends
             mqtt.handle_message(f"btn/BTN-A1B2C3D4E5F{unit}/press", json.dumps(
-                {"seq": 100 + n, "boot": 1, "age_ms": 60000 * (day * 1440 - hour * 60 + rng.randrange(60))}).encode())
+                {"seq": 100 + n, "boot": 1, "age_ms": 60000 * (day * 1440 - hour * 60 + rng.randrange(60))}).encode())  # NOSONAR: fixed seed on purpose, so the mocks come out the same every time; not a security use
 
         with SessionLocal() as db:
             for p in db.query(Press).all():
@@ -148,7 +150,7 @@ def server_mocks() -> None:
         save(S, "button-revoked", "Button: revoked", "A revoked button's presses are ignored. It can be restored.", a.get("/buttons/4"))
         a.post("/buttons/4/restore")
         mqtt.handle_message("btn/BTN-A1B2C3D4E5F3/status", json.dumps(
-            {"online": True, "fw": "0.1.0", "rssi": -70, "channel": 11, "ip": "192.168.1.73", "nc_fault": True}).encode())
+            {"online": True, "fw": "0.1.0", "rssi": -70, "channel": 11, "ip": "192.0.2.73", "nc_fault": True}).encode())
         save(S, "updates", "Updates", "Upload firmware and press sounds, then send them to chosen buttons.", a.get("/updates"))
 
         a.post("/users", {"email": "lee@example.com", "name": "Lee Okafor", "role": "manager"})

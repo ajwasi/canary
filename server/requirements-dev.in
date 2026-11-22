@@ -1,0 +1,4 @@
+# Test dependencies. Regenerate requirements-dev.txt the same way as requirements.txt.
+-r requirements.in
+pytest==9.0.3
+httpx==0.28.1
