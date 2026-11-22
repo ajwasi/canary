@@ -36,6 +36,14 @@ def new_key_and_csr(serial: str):
     return key_pem, csr.public_bytes(serialization.Encoding.PEM).decode()
 
 
+def clean_cert(text) -> bytes:
+    """Keep only a real certificate: parse what the server sent and write it back out as PEM."""
+    try:
+        return x509.load_pem_x509_certificate(text.encode()).public_bytes(serialization.Encoding.PEM)
+    except (ValueError, AttributeError):
+        sys.exit("The server did not send a valid certificate")
+
+
 def state_root(arg: str) -> Path:
     """--state, resolved. It has to be inside the current folder, your home folder or the temp folder."""
     path = os.path.realpath(arg)
@@ -87,7 +95,7 @@ def main() -> None:
         except urllib.error.HTTPError as exc:
             sys.exit(f"Enrolment refused: HTTP {exc.code} {exc.read().decode(errors='replace')}")
         key_file.write_bytes(key_pem)
-        cert_file.write_text(cert)
+        cert_file.write_bytes(clean_cert(cert))
         print(f"Enrolled as {args.serial}.")
     save_meta()
     if args.enrol_only:
@@ -125,7 +133,7 @@ def main() -> None:
             meta["audio_sha"] = cmd["sha256"]
         elif kind == "cert" and pending.get("key"):
             key_file.write_bytes(pending.pop("key"))
-            cert_file.write_text(cmd["cert"])
+            cert_file.write_bytes(clean_cert(cmd["cert"]))
             print("Certificate renewed (used from the next start).")
         elif kind in ("identify", "reboot", "name"):
             print(f"Command: {cmd}")

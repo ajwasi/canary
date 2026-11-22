@@ -257,7 +257,7 @@ class Button:
         self._play_sound()
         q = self.queue()
         meta = self._load("evq_meta.json", {"tail": 0})
-        item = {"seq": meta["tail"], "boot": self.cfg.get("boot", 0),
+        item = {"seq": meta["tail"], "boot": int(self.cfg.get("boot", 0)),
                 "ts": round(time.time(), 3) if self.clock_set else 0, "up": time.monotonic() - self._boot_time}
         q.append(item)
         meta["tail"] += 1
