@@ -16,8 +16,10 @@ import argparse
 import asyncio
 import ipaddress
 import logging
+import os
 import ssl
 import struct
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -35,10 +37,14 @@ CONNECT, CONNACK, PUBLISH, PUBACK, SUBSCRIBE, SUBACK, UNSUBSCRIBE, UNSUBACK, PIN
 
 def ensure_dev_cert(state: Path) -> tuple[Path, Path]:
     """Self-signed server certificate for localhost. Emulated buttons trust it with --cafile."""
-    cert_file, key_file = state / "dev-server.pem", state / "dev-server.key"
+    folder = os.path.realpath(state)
+    roots = [os.path.realpath(r) for r in (os.getcwd(), os.path.expanduser("~"), tempfile.gettempdir())]
+    if not any(folder == root or folder.startswith(root + os.sep) for root in roots):
+        raise ValueError(f"{state} is not inside the current folder, your home folder or the temp folder")
+    cert_file, key_file = Path(folder, "dev-server.pem"), Path(folder, "dev-server.key")
     if cert_file.exists() and key_file.exists():
         return cert_file, key_file
-    state.mkdir(parents=True, exist_ok=True)
+    os.makedirs(folder, exist_ok=True)
     key = ec.generate_private_key(ec.SECP256R1())
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "localhost")])
     now = datetime.now(timezone.utc)
