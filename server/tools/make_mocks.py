@@ -46,10 +46,13 @@ screens: list[tuple[str, str, str, str]] = []          # (group, file, title, no
 
 
 def save(group: str, name: str, title: str, note: str, html: str) -> None:
-    """Make the page self-contained and point its links at the other mock files."""
-    html = html.replace('<link rel="stylesheet" href="/static/app.css">', f"<style>{CSS}</style>")
+    """Point the page at the shared stylesheet and script and at the other mock files."""
+    (OUT / "assets").mkdir(parents=True, exist_ok=True)
+    (OUT / "assets" / "app.css").write_text(CSS, encoding="utf-8")
+    (OUT / "assets" / "chart.js").write_text(CHART_JS, encoding="utf-8")
+    html = html.replace('<link rel="stylesheet" href="/static/app.css">', '<link rel="stylesheet" href="../assets/app.css">')
     html = html.replace('<meta http-equiv="refresh" content="30">', "")
-    html = html.replace('<script src="/static/chart.js" defer></script>', f"<script>{CHART_JS}</script>")
+    html = html.replace('<script src="/static/chart.js" defer></script>', '<script src="../assets/chart.js" defer></script>')
     html = re.sub(r'href="(/[^"]*)"', lambda m: f'href="{LINKS.get(m.group(1), "#")}"', html)
     html = html.replace("<form ", '<form onsubmit="return false" ')
     (OUT / group).mkdir(parents=True, exist_ok=True)
